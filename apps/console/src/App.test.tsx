@@ -132,4 +132,25 @@ describe('Assurance Console', () => {
     expect(await screen.findByRole('heading', { name: 'Findings & risks' })).toBeInTheDocument();
     expect(await screen.findByRole('complementary', { name: /FND-005/ })).toBeInTheDocument();
   });
+
+  it('restores a focused workpaper after browser Back and Forward', async () => {
+    const user = userEvent.setup();
+    window.history.replaceState(null, '', '/#controls/SC-7.1');
+    render(<App />);
+    expect(await screen.findByRole('heading', { name: 'Controls' })).toBeInTheDocument();
+    expect(await screen.findByRole('complementary', { name: /SC-7\.1/ })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('link', { name: 'Overview' }));
+    expect(await screen.findByRole('heading', { name: 'Assurance overview' })).toBeInTheDocument();
+    expect(window.location.hash).toBe('#overview');
+
+    window.history.back();
+    await waitFor(() => expect(window.location.hash).toBe('#controls/SC-7.1'));
+    expect(await screen.findByRole('heading', { name: 'Controls' })).toBeInTheDocument();
+    expect(await screen.findByRole('complementary', { name: /SC-7\.1/ })).toBeInTheDocument();
+
+    window.history.forward();
+    await waitFor(() => expect(window.location.hash).toBe('#overview'));
+    expect(await screen.findByRole('heading', { name: 'Assurance overview' })).toBeInTheDocument();
+  });
 });

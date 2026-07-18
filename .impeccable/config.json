@@ -1,0 +1,11 @@
+{
+  "detector": {
+    "ignoreRules": [
+      "side-tab"
+    ],
+    "ignoreFiles": [
+      "apps/console/src/styles.css"
+    ],
+    "ignoreValues": []
+  }
+}

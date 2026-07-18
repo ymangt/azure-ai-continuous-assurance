@@ -25,6 +25,10 @@ Calm Azure enterprise workbench: navy sidebar, light content canvas, crisp table
 | `--success` | `#0e7a5f` | Pass / healthy |
 | `--warning` | `#9a5d00` | Caution / stale |
 | `--danger` | `#b4233d` | Fail / material risk |
+| `--focus-ring` | `#4aa8dc` | Keyboard focus outline |
+| `--overlay-scrim` | `rgba(7, 23, 43, 0.42)` | Mobile detail-panel dimmer |
+| `--candidate-wash` | `#f5f9fc` | AI-suggestion / candidate surface |
+| `--candidate-border` | `#b9d3e5` | Candidate surface border |
 | Page background | `#f4f7fb` | App canvas |
 
 Do not introduce purple gradients, neon accents, or black `#000` cyber themes.
@@ -41,7 +45,7 @@ Do not introduce purple gradients, neon accents, or black `#000` cyber themes.
 - Fixed navy sidebar (~248px) + fluid main content
 - Section cards with light shadow (`--shadow`)
 - Master-detail for controls/evidence/findings (`DetailPanel`)
-- Overview metric grid → two-column grids → tables → trace chain
+- Overview order: metric grid → two-column grids → criteria-to-retest trace → priority findings table
 - Prefer existing `SectionCard`, `MetricCard`, `StatusBadge`, `OverviewPreviewDialog` patterns
 
 ## Components
@@ -71,6 +75,7 @@ Do not introduce purple gradients, neon accents, or black `#000` cyber themes.
 - Keep assurance language precise (PASS ≠ EFFECTIVE)
 - Use preview dialogs for overview navigation that would otherwise yank context
 - Match spacing/radius already used by `.section-card`, `.metric-card`, `.trace-step`
+- Left-edge accents on readiness/assessor notes and active nav are intentional Azure workbench chrome, not generic AI side-tabs
 
 ## Don’ts
 

@@ -104,7 +104,18 @@ export function OverviewScreen({ data, onNavigate }: OverviewScreenProps) {
       <section className="metric-grid metric-grid-prioritized" aria-label="Assessment metrics">
         <MetricCard label="Findings requiring action" value={openFindings.length} detail={`${materialRisks} material residual risk${materialRisks === 1 ? '' : 's'}`} tone={materialRisks ? 'danger' : openFindings.length ? 'warning' : 'good'} icon={<ShieldError24Regular />} onClick={() => showPreview({ kind: 'risks' })} />
         <MetricCard label="Test coverage" value={`${Math.round(coverage * 100)}%`} detail={`${data.controls.length} tailored objectives in the current snapshot`} tone="good" icon={<CheckmarkCircle24Regular />} onClick={() => showPreview({ kind: 'coverage' })} />
-        <MetricCard label="Current evidence" value={`${currentEvidence}/${data.evidence.length}`} detail="Freshness is evaluated independently from result" tone={currentEvidence === data.evidence.length ? 'good' : 'warning'} icon={<DocumentData24Regular />} onClick={() => showPreview({ kind: 'evidence' })} />
+        <MetricCard
+          label="Current evidence"
+          value={`${currentEvidence}/${data.evidence.length}`}
+          detail={
+            staleEvidence || unavailableEvidence
+              ? `${staleEvidence} stale · ${unavailableEvidence} unavailable · required gaps force NOT CONCLUDED`
+              : 'All current · required stale/unavailable evidence forces NOT CONCLUDED'
+          }
+          tone={currentEvidence === data.evidence.length ? 'good' : 'warning'}
+          icon={<DocumentData24Regular />}
+          onClick={() => showPreview({ kind: 'evidence' })}
+        />
       </section>
 
       <div className="two-column-grid overview-grid">

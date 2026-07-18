@@ -19,6 +19,10 @@
   --success: #0e7a5f;
   --warning: #9a5d00;
   --danger: #b4233d;
+  --focus-ring: #4aa8dc;
+  --overlay-scrim: rgba(7, 23, 43, 0.42);
+  --candidate-wash: #f5f9fc;
+  --candidate-border: #b9d3e5;
   --shadow: 0 8px 24px rgba(20, 42, 74, 0.07);
 }
 
@@ -85,7 +89,7 @@ p { line-height: 1.55; }
 .metric-button { display: block; width: 100%; padding: 0; color: inherit; background: none; border: 0; cursor: pointer; text-align: left; }
 .metric-button .metric-card { width: 100%; }
 .metric-button:hover .metric-card { border-color: #9ebbd2 !important; transform: translateY(-1px); }
-.metric-button:focus-visible { border-radius: 10px; outline: 3px solid #4aa8dc; outline-offset: 2px; }
+.metric-button:focus-visible { border-radius: 10px; outline: 3px solid var(--focus-ring); outline-offset: 2px; }
 .metric-card::before { position: absolute; inset: 0 auto 0 0; width: 3px; content: ""; background: #66809b; }
 .metric-good::before { background: var(--success); }
 .metric-warning::before { background: #d38b13; }
@@ -130,7 +134,7 @@ p { line-height: 1.55; }
 
 .table-card { min-width: 0; overflow: hidden; background: var(--surface); border: 1px solid var(--line); border-radius: 9px; box-shadow: 0 3px 14px rgba(20,42,74,.04); }
 .table-scroll { width: 100%; overflow: auto; }
-.table-scroll:focus-visible { outline: 3px solid #4aa8dc; outline-offset: -3px; }
+.table-scroll:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: -3px; }
 .data-table { width: 100%; min-width: 980px; border-collapse: separate; border-spacing: 0; font-size: .8rem; }
 .data-table th { position: sticky; z-index: 2; top: 0; padding: 11px 12px; color: #42566d; background: #f3f6f9; border-bottom: 1px solid var(--line-strong); font-size: .68rem; font-weight: 700; letter-spacing: .055em; text-align: left; text-transform: uppercase; white-space: nowrap; }
 .data-table td { max-width: 320px; padding: 12px; vertical-align: top; color: #2b3b50; background: #fff; border-bottom: 1px solid #e8edf2; line-height: 1.4; }
@@ -201,7 +205,7 @@ p { line-height: 1.55; }
 .master-detail { position: relative; display: grid; grid-template-columns: minmax(0, 1fr); min-width: 0; gap: 14px; }
 .master-detail.detail-open { grid-template-columns: minmax(520px, 1fr) minmax(340px, 440px); align-items: start; }
 .detail-panel { position: sticky; top: 104px; display: flex; max-height: calc(100vh - 130px); flex-direction: column; overflow: hidden; background: #fff; border: 1px solid var(--line-strong); border-radius: 9px; box-shadow: var(--shadow); }
-.detail-panel-scrim { position: fixed; z-index: 23; inset: 82px 0 0; background: rgba(7, 23, 43, .42); border: 0; }
+.detail-panel-scrim { position: fixed; z-index: 23; inset: 82px 0 0; background: var(--overlay-scrim); border: 0; }
 .detail-panel-header { display: flex; flex: 0 0 auto; align-items: flex-start; justify-content: space-between; gap: 14px; padding: 18px; background: #f7f9fb; border-bottom: 1px solid var(--line); }
 .detail-panel-header h2 { margin: 0 0 5px; font-size: 1.15rem; }
 .detail-panel-body { display: grid; gap: 18px; padding: 18px; overflow-y: auto; }
@@ -297,8 +301,8 @@ p { line-height: 1.55; }
 .comparison-bar-row { display: grid; grid-template-columns: minmax(190px,.7fr) 1fr 1fr; align-items: center; gap: 18px; }
 .comparison-bar-row > div { display: grid; gap: 5px; }
 .comparison-bar-row span { color: var(--muted); font-size: .72rem; }
-.suggestion-card { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 14px; padding: 15px; background: #f5f9fc; border: 1px solid #b9d3e5; border-radius: 8px; }
-.suggestion-icon { display: grid; width: 40px; height: 40px; place-items: center; color: #075985; background: #dff1ff; border: 1px solid #b8dbee; border-radius: 8px; }
+.suggestion-card { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 14px; padding: 15px; background: var(--candidate-wash); border: 1px solid var(--candidate-border); border-radius: 8px; }
+.suggestion-icon { display: grid; width: 40px; height: 40px; place-items: center; color: var(--azure-700); background: var(--azure-100); border: 1px solid var(--candidate-border); border-radius: 8px; }
 .suggestion-content { display: grid; gap: 5px; }
 .suggestion-content > div { display: flex; align-items: center; gap: 7px; }
 .suggestion-actions { display: flex; gap: 7px; }

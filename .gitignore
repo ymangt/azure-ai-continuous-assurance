@@ -28,8 +28,9 @@ artifacts/work/
 *.pfx
 
 # Local agent skill payloads (reinstall; do not vendor in git)
-.agents/
+.agents/skills/
 .cursor/skills/
 .cursor/hooks.json
-.impeccable/
+.impeccable/*
+!.impeccable/config.json
 skills-lock.json
