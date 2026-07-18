@@ -1,5 +1,4 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import { vi } from 'vitest';
 import { assuranceApi } from '../api/client';
 import { cloneSnapshot } from '../mockData';
@@ -9,7 +8,6 @@ describe('remediation lifecycle command', () => {
   afterEach(() => vi.restoreAllMocks());
 
   it('captures implementation proof and binds it to the selected signed run', async () => {
-    const user = userEvent.setup();
     const snapshot = cloneSnapshot();
     const finding = snapshot.findings.find((item) => item.id === 'FND-005');
     if (!finding) throw new Error('FND-005 is missing from the checked-in sample');
@@ -20,14 +18,14 @@ describe('remediation lifecycle command', () => {
     });
 
     render(<FindingsScreen data={snapshot} publicMode={false} onNavigate={() => undefined} onCommand={() => undefined} />);
-    await user.click(screen.getByRole('button', { name: /FND-005/ }));
-    await user.click(screen.getByRole('button', { name: 'Mark ready for retest' }));
-    const dialog = await screen.findByRole('dialog', undefined, { timeout: 5_000 });
+    fireEvent.click(screen.getByRole('button', { name: /FND-005/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Mark ready for retest' }));
+    const dialog = screen.getByRole('dialog');
     fireEvent.change(within(dialog).getByLabelText(/Remediation owner/), { target: { value: 'Cloud Owner' } });
     fireEvent.change(within(dialog).getByLabelText(/Remediation action/), { target: { value: 'Remove the broad ingress rule through reviewed infrastructure code.' } });
     fireEvent.change(within(dialog).getByLabelText(/Commit or pull request/), { target: { value: 'PR-101' } });
     fireEvent.change(within(dialog).getByLabelText(/Evidence IDs/), { target: { value: evidenceId } });
-    await user.click(within(dialog).getByRole('button', { name: 'Record readiness', hidden: true }));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Record readiness', hidden: true }));
 
     await waitFor(() => expect(createRemediation).toHaveBeenCalledWith(expect.objectContaining({
       finding_id: 'FND-005',
