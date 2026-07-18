@@ -1,0 +1,96 @@
+{
+  "system-security-plan": {
+    "uuid":"10000000-0000-4000-8000-000000000005",
+    "metadata":{
+      "title":"Azure AI Continuous Assurance System Security Plan",
+      "published":"2026-05-20T12:00:00Z",
+      "last-modified":"2026-05-20T12:00:00Z",
+      "version":"1.0.0",
+      "oscal-version":"1.2.2",
+      "props":[{"name":"marking","value":"PUBLIC-SANITIZED"},{"name":"assessment-type","value":"internal-readiness-simulation"}],
+      "roles":[{"id":"system-owner","title":"System Owner"},{"id":"assessor","title":"Simulated Assessor"},{"id":"risk-approver","title":"Simulated Risk Approver"}],
+      "parties":[
+        {"uuid":"10000000-0000-4000-8000-000000000099","type":"organization","name":"AICA Project (simulated)"},
+        {"uuid":"10000000-0000-4000-8000-000000000098","type":"person","name":"Public Sample System Owner"}
+      ],
+      "responsible-parties":[
+        {"role-id":"system-owner","party-uuids":["10000000-0000-4000-8000-000000000098"]},
+        {"role-id":"assessor","party-uuids":["10000000-0000-4000-8000-000000000098"]},
+        {"role-id":"risk-approver","party-uuids":["10000000-0000-4000-8000-000000000098"]}
+      ],
+      "remarks":"All personas are simulated by one project author. This SSP supports continuous internal assurance and audit readiness, not authorization or certification."
+    },
+    "import-profile":{"href":"./aica-profile.json"},
+    "system-characteristics":{
+      "system-ids":[{"identifier-type":"https://example.invalid/aica/system-id","id":"aica-public-sanitized"}],
+      "system-name":"Azure AI Continuous Assurance",
+      "system-name-short":"AICA",
+      "description":"A small synthetic policy assistant in East US 2 and an independent assurance plane in Canada Central, with sanitized public reporting and reused Azure Activity/Sentinel telemetry.",
+      "props":[{"name":"data-classification","value":"synthetic-only"},{"name":"cost-profile","value":"student-cad-25-monthly-ceiling"}],
+      "security-sensitivity-level":"low",
+      "system-information":{
+        "information-types":[{
+          "uuid":"30000000-0000-4000-8000-000000000001",
+          "title":"Synthetic policy and assurance information",
+          "description":"Synthetic policies, pseudonymous telemetry, configuration evidence, findings, risks, and reviewer decisions.",
+          "categorizations":[{"system":"https://doi.org/10.6028/NIST.SP.800-60v2r1","information-type-ids":["C.3.5.8"]}],
+          "confidentiality-impact":{"base":"low"},
+          "integrity-impact":{"base":"moderate"},
+          "availability-impact":{"base":"low"}
+        }]
+      },
+      "security-impact-level":{"security-objective-confidentiality":"low","security-objective-integrity":"moderate","security-objective-availability":"low"},
+      "status":{"state":"operational"},
+      "authorization-boundary":{"description":"Includes project resource groups, workload and assurance identities, policy assistant, synthetic corpus, assurance API/job, private evidence, review decisions, operations telemetry, and configured Sentinel content. Excludes the Azure platform, user endpoints, GitHub SaaS, public GHCR infrastructure, and unrelated tenant resources."},
+      "network-architecture":{"description":"Azure-managed public ingress terminates TLS. Entra/RBAC, service authentication, rate limits, workload identity, and application authorization compensate for intentionally excluded private networking in the student-cost profile."},
+      "data-flow":{"description":"Synthetic policies flow from version control to Blob and local FTS5 retrieval. Assistant metadata flows to operations telemetry. Read-only Azure/GitHub evidence flows to private evidence storage, deterministic evaluation, review, signed manifests, and sanitized public snapshots. Raw prompts and responses are retained only for controlled evaluation evidence."},
+      "responsible-parties":[{"role-id":"system-owner","party-uuids":["10000000-0000-4000-8000-000000000098"]}]
+    },
+    "system-implementation":{
+      "remarks":"Microsoft secures Azure physical facilities and managed platform layers. The project configures identities, applications, data, logging, monitoring, evaluation, and evidence handling. GitHub secures the SaaS platform while the project secures workflows, OIDC trust, dependencies, and branch controls.",
+      "users":[{
+        "uuid":"30000000-0000-4000-8000-000000000002","title":"Authorized policy user","short-name":"policy-user","description":"Synthetic end-user persona authenticated through Entra.","props":[{"name":"type","value":"internal"}],"authorized-privileges":[{"title":"Policy inquiry","functions-performed":["Query synthetic policies","Confirm or cancel a synthetic access-exception request"]}]
+      }],
+      "components":[
+        {"uuid":"20000000-0000-4000-8000-000000000001","type":"software","title":"Internal Policy Assistant","description":"Retrieval assistant and approval-gated synthetic tool.","purpose":"System under assurance","status":{"state":"operational"},"props":[{"name":"implementation-point","value":"internal"}],"responsible-roles":[{"role-id":"system-owner","party-uuids":["10000000-0000-4000-8000-000000000098"]}]},
+        {"uuid":"20000000-0000-4000-8000-000000000002","type":"software","title":"Assurance Pipeline","description":"Collector, deterministic evaluator, lifecycle recorder, signer, and sanitizer.","purpose":"Independent assurance plane","status":{"state":"operational"},"props":[{"name":"implementation-point","value":"internal"}],"responsible-roles":[{"role-id":"assessor","party-uuids":["10000000-0000-4000-8000-000000000098"]}]},
+        {"uuid":"20000000-0000-4000-8000-000000000003","type":"service","title":"Microsoft Azure Services","description":"Container Apps, Storage, Key Vault, Monitor, Foundry or Azure-hosted fallback, Entra, and Sentinel services.","purpose":"Cloud hosting and platform security capabilities","status":{"state":"operational"},"props":[{"name":"implementation-point","value":"external"}]},
+        {"uuid":"20000000-0000-4000-8000-000000000004","type":"service","title":"GitHub SaaS and GHCR","description":"Version control, CI, OIDC deployment identity, public signed images, and source artifact hosting.","purpose":"Software supply chain","status":{"state":"operational"},"props":[{"name":"implementation-point","value":"external"}]}
+      ],
+      "inventory-items":[
+        {"uuid":"30000000-0000-4000-8000-000000000010","description":"Synthetic policy corpus","props":[{"name":"asset-id","value":"corpus-public-sample"},{"name":"data-classification","value":"synthetic"}],"implemented-components":[{"component-uuid":"20000000-0000-4000-8000-000000000001"}]},
+        {"uuid":"30000000-0000-4000-8000-000000000011","description":"Private versioned evidence store","props":[{"name":"asset-id","value":"evidence-private-sanitized-id"},{"name":"data-classification","value":"restricted-assurance"}],"implemented-components":[{"component-uuid":"20000000-0000-4000-8000-000000000002"}]}
+      ]
+    },
+    "control-implementation":{
+      "description":"Implementation statements are scoped to the AICA student-cost profile; detailed objectives, evidence, methods, limitations, and cadence are in the control profile and assessment plan.",
+      "implemented-requirements":[
+        {"uuid":"31000000-0000-4000-8000-000000000001","control-id":"ac-2","by-components":[{"component-uuid":"20000000-0000-4000-8000-000000000002","uuid":"32000000-0000-4000-8000-000000000001","description":"Project identities are inventoried automatically and their ownership and continued need are reviewed quarterly."}]},
+        {"uuid":"31000000-0000-4000-8000-000000000002","control-id":"ac-3","by-components":[{"component-uuid":"20000000-0000-4000-8000-000000000001","uuid":"32000000-0000-4000-8000-000000000002","description":"Entra and server-side authorization enforce access; append-only commands use expected-version concurrency."}]},
+        {"uuid":"31000000-0000-4000-8000-000000000003","control-id":"ac-6","by-components":[{"component-uuid":"20000000-0000-4000-8000-000000000002","uuid":"32000000-0000-4000-8000-000000000003","description":"Distinct workload identities receive task-scoped roles; the collector is read-only except at its evidence destination."}]},
+        {"uuid":"31000000-0000-4000-8000-000000000004","control-id":"ia-2","by-components":[{"component-uuid":"20000000-0000-4000-8000-000000000001","uuid":"32000000-0000-4000-8000-000000000004","description":"Interactive private-console users authenticate with Entra; public mode is read-only and disconnected from Azure."}]},
+        {"uuid":"31000000-0000-4000-8000-000000000005","control-id":"ia-5","by-components":[{"component-uuid":"20000000-0000-4000-8000-000000000003","uuid":"32000000-0000-4000-8000-000000000005","description":"Managed identities replace stored Azure workload secrets."},{"component-uuid":"20000000-0000-4000-8000-000000000004","uuid":"32000000-0000-4000-8000-000000000105","description":"GitHub OIDC federation replaces stored deployment credentials; secret scans run on every change."}]},
+        {"uuid":"31000000-0000-4000-8000-000000000006","control-id":"au-2","by-components":[{"component-uuid":"20000000-0000-4000-8000-000000000002","uuid":"32000000-0000-4000-8000-000000000006","description":"A reviewed taxonomy defines security, assurance, authentication, command, tool-use, and configuration-change events."}]},
+        {"uuid":"31000000-0000-4000-8000-000000000007","control-id":"au-6","by-components":[{"component-uuid":"20000000-0000-4000-8000-000000000002","uuid":"32000000-0000-4000-8000-000000000007","description":"Weekly review covers anomalies, failed collection, stale evidence, and repeated rejected tool escalation."}]},
+        {"uuid":"31000000-0000-4000-8000-000000000008","control-id":"au-12","by-components":[{"component-uuid":"20000000-0000-4000-8000-000000000001","uuid":"32000000-0000-4000-8000-000000000008","description":"Structured telemetry includes correlation, pseudonymous actor, outcome, model, retrieval, guardrail, and tool state."}]},
+        {"uuid":"31000000-0000-4000-8000-000000000009","control-id":"ca-7","by-components":[{"component-uuid":"20000000-0000-4000-8000-000000000002","uuid":"32000000-0000-4000-8000-000000000009","description":"Daily and change-triggered assessments preserve freshness and distinguish pass, fail, error, not-run, and not-applicable."}]},
+        {"uuid":"31000000-0000-4000-8000-000000000010","control-id":"cm-2","by-components":[{"component-uuid":"20000000-0000-4000-8000-000000000002","uuid":"32000000-0000-4000-8000-000000000010","description":"Compiled Bicep, pinned image digests, and versioned configuration form the approved baseline."}]},
+        {"uuid":"31000000-0000-4000-8000-000000000011","control-id":"cm-3","by-components":[{"component-uuid":"20000000-0000-4000-8000-000000000004","uuid":"32000000-0000-4000-8000-000000000011","description":"Pull request, commit, provenance, What-If, deployment, and Activity evidence form the change record."}]},
+        {"uuid":"31000000-0000-4000-8000-000000000012","control-id":"cm-6","by-components":[{"component-uuid":"20000000-0000-4000-8000-000000000002","uuid":"32000000-0000-4000-8000-000000000012","description":"Deterministic rules evaluate required secure configuration while recording cost-profile exceptions."}]},
+        {"uuid":"31000000-0000-4000-8000-000000000013","control-id":"cp-9","by-components":[{"component-uuid":"20000000-0000-4000-8000-000000000003","uuid":"32000000-0000-4000-8000-000000000013","description":"Evidence storage uses versioning, soft delete, lifecycle retention, and tested restoration."}]},
+        {"uuid":"31000000-0000-4000-8000-000000000014","control-id":"ir-4","by-components":[{"component-uuid":"20000000-0000-4000-8000-000000000002","uuid":"32000000-0000-4000-8000-000000000014","description":"Cloud and AI incident playbooks define triage, containment, evidence preservation, escalation, and recovery."}]},
+        {"uuid":"31000000-0000-4000-8000-000000000015","control-id":"ra-3","by-components":[{"component-uuid":"20000000-0000-4000-8000-000000000002","uuid":"32000000-0000-4000-8000-000000000015","description":"Risks use cause-event-impact statements, 5x5 inherent and residual ratings, owners, treatments, and reviews."}]},
+        {"uuid":"31000000-0000-4000-8000-000000000016","control-id":"ra-5","by-components":[{"component-uuid":"20000000-0000-4000-8000-000000000004","uuid":"32000000-0000-4000-8000-000000000016","description":"SBOM and image/dependency scanning gate critical unresolved vulnerabilities."}]},
+        {"uuid":"31000000-0000-4000-8000-000000000017","control-id":"sa-11","by-components":[{"component-uuid":"20000000-0000-4000-8000-000000000004","uuid":"32000000-0000-4000-8000-000000000017","description":"Unit, contract, negative, fault, security, IaC, KQL, behavioral, and sanitization tests gate release."}]},
+        {"uuid":"31000000-0000-4000-8000-000000000018","control-id":"sc-7","by-components":[{"component-uuid":"20000000-0000-4000-8000-000000000003","uuid":"32000000-0000-4000-8000-000000000018","description":"Internet administrative ingress is detected; authenticated public endpoints are documented as a cost-profile residual risk."}]},
+        {"uuid":"31000000-0000-4000-8000-000000000019","control-id":"sc-8","by-components":[{"component-uuid":"20000000-0000-4000-8000-000000000003","uuid":"32000000-0000-4000-8000-000000000019","description":"TLS 1.2 or later and secure transfer are required at in-scope endpoints."}]},
+        {"uuid":"31000000-0000-4000-8000-000000000020","control-id":"si-4","by-components":[{"component-uuid":"20000000-0000-4000-8000-000000000002","uuid":"32000000-0000-4000-8000-000000000020","description":"Approved queries validate telemetry freshness and four focused Sentinel detections."}]},
+        {"uuid":"31000000-0000-4000-8000-000000000021","control-id":"ai-gv-01","by-components":[{"component-uuid":"20000000-0000-4000-8000-000000000002","uuid":"32000000-0000-4000-8000-000000000021","description":"Governance defines use boundaries, owners, risk tolerance, human authority, and escalation."}]},
+        {"uuid":"31000000-0000-4000-8000-000000000022","control-id":"ai-dp-01","by-components":[{"component-uuid":"20000000-0000-4000-8000-000000000001","uuid":"32000000-0000-4000-8000-000000000022","description":"Grounding documents carry provenance, classification, hashes, and injection test dispositions."}]},
+        {"uuid":"31000000-0000-4000-8000-000000000023","control-id":"ai-ac-01","by-components":[{"component-uuid":"20000000-0000-4000-8000-000000000001","uuid":"32000000-0000-4000-8000-000000000023","description":"Tool requests are independently authorized and consequential execution requires explicit confirmation."}]},
+        {"uuid":"31000000-0000-4000-8000-000000000024","control-id":"ai-te-01","by-components":[{"component-uuid":"20000000-0000-4000-8000-000000000002","uuid":"32000000-0000-4000-8000-000000000024","description":"Material AI changes require fixed versioned evaluation results that meet declared gates."}]},
+        {"uuid":"31000000-0000-4000-8000-000000000025","control-id":"ai-mo-01","by-components":[{"component-uuid":"20000000-0000-4000-8000-000000000001","uuid":"32000000-0000-4000-8000-000000000025","description":"Content-minimized AI telemetry supports abuse monitoring, configuration change detection, and escalation."}]}
+      ]
+    }
+  }
+}

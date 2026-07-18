@@ -1,0 +1,197 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test-and-policy:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: '**/package-lock.json'
+
+      - name: Install pinned Bicep CLI
+        shell: bash
+        run: |
+          curl --fail --location --silent --show-error \
+            --output /tmp/bicep \
+            https://github.com/Azure/bicep/releases/download/v0.45.15/bicep-linux-x64
+          echo 'ff5b194b042c220df4a50d6768ed1d6c39a32894bfdc4ff83d62b115d966a7ce  /tmp/bicep' | sha256sum --check
+          chmod +x /tmp/bicep
+          echo /tmp >> "$GITHUB_PATH"
+
+      - name: Build Bicep and parameter files
+        shell: bash
+        run: |
+          bicep build infra/main.bicep --outfile /tmp/aica-main.json
+          for file in infra/parameters/*.bicepparam; do
+            bicep build-params "$file" --stdout >/dev/null
+          done
+
+      - name: Install and verify Conftest
+        shell: bash
+        run: |
+          version=0.68.2
+          archive="conftest_${version}_Linux_x86_64.tar.gz"
+          base="https://github.com/open-policy-agent/conftest/releases/download/v${version}"
+          curl --fail --location --silent --show-error --output "/tmp/${archive}" "${base}/${archive}"
+          curl --fail --location --silent --show-error --output /tmp/conftest-checksums.txt "${base}/checksums.txt"
+          (cd /tmp && grep " ${archive}$" conftest-checksums.txt | sha256sum --check)
+          tar --extract --gzip --file "/tmp/${archive}" --directory /tmp conftest
+          /tmp/conftest verify --policy policy
+
+      - name: Evaluate compliant and negative ARM fixtures
+        shell: bash
+        run: |
+          /tmp/conftest test /tmp/aica-main.json --policy policy --namespace aica.azure
+          /tmp/conftest test policy/fixtures/compliant.json --policy policy --namespace aica.azure
+          for fixture in policy/fixtures/public-storage.json policy/fixtures/floating-image.json policy/fixtures/fixture-missing-tags.json policy/fixtures/overprivileged-role.json; do
+            if /tmp/conftest test "$fixture" --policy policy --namespace aica.azure; then
+              echo "negative fixture unexpectedly passed: $fixture" >&2
+              exit 1
+            fi
+          done
+
+      - name: Install Python project and validation dependencies
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e '.[dev]'
+
+      - name: Run Python quality, contract, and assurance gates
+        shell: bash
+        env:
+          PYTHONPATH: src
+        run: |
+          python -m ruff check src tests assurance/scripts scripts/azure sentinel/tests
+          python -m mypy src
+          python -m pytest
+          python assurance/scripts/validate_contracts.py
+          python assurance/scripts/validate_oscal.py
+          python assurance/scripts/validate_artifacts.py
+          python assurance/scripts/validate_scenarios.py --conftest /tmp/conftest
+          python assurance/scripts/score_mapping_benchmark.py
+          python -m aica.cli evaluation generate --adapter replay --output /tmp/aica-replay-results.json
+          python -m aica.cli evaluation behavioral --results /tmp/aica-replay-results.json
+          python -m aica.cli evaluation behavioral
+          python -m aica.cli evaluation mapping
+
+      - name: Run TypeScript tests and production builds
+        shell: bash
+        run: |
+          npm ci
+          npm run lint --if-present
+          npm run typecheck --if-present
+          npm test
+          npm run build
+
+      - name: Validate Sentinel, JSON, and workflow pins
+        run: python scripts/azure/validate-content.py
+
+      - name: Require digest-pinned Dockerfile stages
+        run: python scripts/azure/validate-dockerfiles.py
+
+      - name: Run Sentinel synthetic-record contracts
+        run: python -m unittest discover -s sentinel/tests -p 'test_*.py'
+
+      - name: Check shell scripts
+        shell: bash
+        run: |
+          for script in scripts/azure/*.sh; do
+            bash -n "$script"
+          done
+
+      - name: Test What-If and fixture cleanup guards
+        shell: bash
+        run: |
+          python scripts/azure/review-what-if.py infra/tests/what-if-safe.json
+          python scripts/azure/review-what-if.py infra/tests/what-if-command-role-safe.json
+          python scripts/azure/review-what-if.py infra/tests/what-if-subscription-security-reader-safe.json
+          python scripts/azure/review-what-if.py infra/tests/what-if-subscription-budget-safe.json
+          if python scripts/azure/review-what-if.py infra/tests/what-if-delete.json; then
+            echo 'delete fixture unexpectedly passed' >&2
+            exit 1
+          fi
+          if python scripts/azure/review-what-if.py infra/tests/what-if-broad-command-role.json; then
+            echo 'overprivileged command-worker role unexpectedly passed' >&2
+            exit 1
+          fi
+          if python scripts/azure/review-what-if.py infra/tests/what-if-subscription-contributor.json; then
+            echo 'subscription-level Contributor unexpectedly passed' >&2
+            exit 1
+          fi
+          if python scripts/azure/review-what-if.py infra/tests/what-if-phi.json; then
+            echo 'ungated Phi fixture unexpectedly passed' >&2
+            exit 1
+          fi
+          python scripts/azure/review-what-if.py infra/tests/what-if-phi.json --allow-phi-fallback
+          python scripts/azure/plan-fixture-cleanup.py \
+            infra/tests/fixture-inventory-expired.json \
+            --subscription 00000000-0000-0000-0000-000000000000 \
+            --resource-group rg-aica-fixture-eus2 \
+            --scenario excessive-managed-identity-privilege \
+            --confirm DELETE_EXPIRED_FIXTURE:00000000-0000-0000-0000-000000000000:excessive-managed-identity-privilege
+
+      - name: Upload compiled ARM for What-If review
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: compiled-arm-${{ github.sha }}
+          path: /tmp/aica-main.json
+          if-no-files-found: error
+          retention-days: 7
+
+  public-boundary:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: '3.12'
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Build the read-only public Console from signed samples
+        run: |
+          npm ci
+          npm run build --workspace @aica/assurance-console
+      - name: Validate signed public samples and reject private material
+        shell: bash
+        run: |
+          python -m pip install -e '.[dev]'
+          PYTHONPATH=src python assurance/scripts/validate_artifacts.py
+          if rg --pcre2 --hidden --glob '!**/*.map' --glob '!**/node_modules/**' \
+            '(?i)(/subscriptions/[0-9a-f-]{36}|/tenants/[0-9a-f-]{36}|client[_-]?secret|bearer[[:space:]]+[a-z0-9._-]+|BEGIN (RSA|EC|OPENSSH)? ?PRIVATE KEY|"user_input"[[:space:]]*:|raw[_-]?(prompt|response)"?[[:space:]]*:[[:space:]]*"(?!\[REDACTED\]")[^"]+|@(gmail|outlook)\.com)' \
+            data/sample-runs apps/console/dist; then
+            echo 'private identifier, secret, or raw trace found in public artifacts' >&2
+            exit 1
+          fi

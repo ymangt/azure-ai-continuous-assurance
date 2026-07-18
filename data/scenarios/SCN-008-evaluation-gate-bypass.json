@@ -1,0 +1,12 @@
+{
+  "$schema":"../../schemas/scenario.schema.json","scenario_id":"SCN-008","title":"AI configuration change without matching evaluation",
+  "execution":{"mode":"CONTROLLED_BEHAVIORAL_REPLAY","detection_engine":"configuration digest gate plus aica.evaluation.RuleEngine:R-AI-TE-01","azure_live_required_for_release":false,"azure_live_evidence_checked_in":false,"limitation":"The checked-in proof executes the permitted CI-fixture path and creates no ephemeral Azure revision."},
+  "safety":{"data_classification":"SYNTHETIC","allowed_resource_groups":["CI release-gate fixture and ephemeral SUT revision"],"prohibited_actions":["promote the negative revision to public traffic","modify production data","skip cleanup of an ephemeral revision"],"expires_after_minutes":30},
+  "preconditions":["Capture a passing evaluation manifest for the clean configuration","Record model, prompt, retrieval, corpus, guardrail, and tool digests"],
+  "baseline":["Require exact digest equality and PASS status before deployment"],
+  "injection":["Change one prompt or retrieval digest while presenting the older passing artifact","Run the gate against an ephemeral non-routed revision or CI fixture"],
+  "expected":{"objective_id":"AI-TE-01.1","status":"FAIL","observation":"The proposed deployment lacks a passing artifact for its exact configuration digest.","finding_severity":"MODERATE","risk_range":[5,12]},
+  "remediation":["Fail closed on missing, stale, failed, or mismatched artifact","Rerun the complete fixed evaluation for the new digest"],
+  "retest":["Require exact matching manifest to pass","Require six single-field mismatch variants to fail closed"],
+  "cleanup":["Delete the ephemeral non-routed revision","Verify active traffic revision is unchanged","Retain sanitized gate traces"]
+}

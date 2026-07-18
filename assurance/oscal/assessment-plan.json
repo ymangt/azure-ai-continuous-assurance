@@ -1,0 +1,44 @@
+{
+  "assessment-plan": {
+    "uuid":"10000000-0000-4000-8000-000000000006",
+    "metadata":{
+      "title":"AICA Continuous Assessment Plan",
+      "published":"2026-05-25T12:00:00Z",
+      "last-modified":"2026-05-25T12:00:00Z",
+      "version":"1.0.0",
+      "oscal-version":"1.2.2",
+      "props":[{"name":"marking","value":"PUBLIC-SANITIZED"},{"name":"objective-count","value":"35"},{"name":"automated-count","value":"19"},{"name":"hybrid-count","value":"8"},{"name":"manual-count","value":"8"}],
+      "remarks":"Automated checks support objectives but do not alone establish overall control effectiveness. Human roles are simulated by one author."
+    },
+    "import-ssp":{"href":"./system-security-plan.json"},
+    "local-definitions":{
+      "activities":[
+        {"uuid":"40000000-0000-4000-8000-000000000001","title":"Deterministic automated checks","description":"Execute versioned rules over normalized Azure, GitHub, telemetry, IaC, and behavioral evidence.","props":[{"name":"method","value":"TEST"}]},
+        {"uuid":"40000000-0000-4000-8000-000000000002","title":"Hybrid procedures","description":"Combine deterministic output with reviewer inspection of design, scope, and sufficiency.","props":[{"name":"method","value":"EXAMINE"},{"name":"method","value":"TEST"}]},
+        {"uuid":"40000000-0000-4000-8000-000000000003","title":"Manual procedures","description":"Examine policies and workpapers and interview simulated control-owner personas.","props":[{"name":"method","value":"EXAMINE"},{"name":"method","value":"INTERVIEW"}]}
+      ]
+    },
+    "terms-and-conditions":{
+      "parts":[
+        {"name":"scope","title":"Scope","prose":"Project resource groups, identities, assistant, synthetic corpus, assurance services, evidence stores, CI configuration, and associated telemetry. Unrelated tenant resources and Azure platform internals are excluded."},
+        {"name":"sampling","title":"Sampling","prose":"Configuration checks use complete in-scope inventories where APIs permit. Manual reviews select all high-risk changes and a deterministic sample of five routine changes. Behavioral tests run the entire fixed dataset."},
+        {"name":"freshness","title":"Freshness","prose":"Required daily evidence expires after 36 hours; per-change evidence expires when the assessed configuration digest changes. Stale required evidence yields NOT_CONCLUDED, never PASS."},
+        {"name":"independence","title":"Independence limitation","prose":"The assessor, owner, and approver are simulated personas operated by one project author; conclusions are internal readiness statements only."}
+      ]
+    },
+    "reviewed-controls":{
+      "description":"Twenty selected NIST SP 800-53 controls and five project AI controls, assessed through 35 tailored objectives in assurance/controls/control-profile.json.",
+      "control-selections":[{"description":"AICA 20+5 profile","include-controls":[{"control-id":"ac-2"},{"control-id":"ac-3"},{"control-id":"ac-6"},{"control-id":"ia-2"},{"control-id":"ia-5"},{"control-id":"au-2"},{"control-id":"au-6"},{"control-id":"au-12"},{"control-id":"ca-7"},{"control-id":"cm-2"},{"control-id":"cm-3"},{"control-id":"cm-6"},{"control-id":"cp-9"},{"control-id":"ir-4"},{"control-id":"ra-3"},{"control-id":"ra-5"},{"control-id":"sa-11"},{"control-id":"sc-7"},{"control-id":"sc-8"},{"control-id":"si-4"},{"control-id":"ai-gv-01"},{"control-id":"ai-dp-01"},{"control-id":"ai-ac-01"},{"control-id":"ai-te-01"},{"control-id":"ai-mo-01"}]}]
+    },
+    "assessment-subjects":[
+      {"type":"component","description":"Both internal components in the SSP","include-subjects":[{"subject-uuid":"20000000-0000-4000-8000-000000000001","type":"component"},{"subject-uuid":"20000000-0000-4000-8000-000000000002","type":"component"}]}
+    ],
+    "assessment-assets":{
+      "assessment-platforms":[{"uuid":"40000000-0000-4000-8000-000000000010","title":"AICA headless assessor","uses-components":[{"component-uuid":"20000000-0000-4000-8000-000000000002"}]}]
+    },
+    "tasks":[
+      {"uuid":"40000000-0000-4000-8000-000000000020","type":"action","title":"Daily automated assessment","description":"Collect, normalize, redact, hash, evaluate, package, and sign daily evidence.","timing":{"within-date-range":{"start":"2026-06-01T00:00:00Z","end":"2026-06-30T23:59:59Z"}},"associated-activities":[{"activity-uuid":"40000000-0000-4000-8000-000000000001","subjects":[{"type":"component","include-subjects":[{"subject-uuid":"20000000-0000-4000-8000-000000000001","type":"component"},{"subject-uuid":"20000000-0000-4000-8000-000000000002","type":"component"}]}]}]},
+      {"uuid":"40000000-0000-4000-8000-000000000021","type":"milestone","title":"Reviewer conclusion","description":"Review hybrid/manual objectives and record append-only decisions.","timing":{"on-date":{"date":"2026-06-08T12:00:00Z"}},"associated-activities":[{"activity-uuid":"40000000-0000-4000-8000-000000000002","subjects":[{"type":"component","include-subjects":[{"subject-uuid":"20000000-0000-4000-8000-000000000001","type":"component"},{"subject-uuid":"20000000-0000-4000-8000-000000000002","type":"component"}]}]},{"activity-uuid":"40000000-0000-4000-8000-000000000003","subjects":[{"type":"component","include-subjects":[{"subject-uuid":"20000000-0000-4000-8000-000000000001","type":"component"},{"subject-uuid":"20000000-0000-4000-8000-000000000002","type":"component"}]}]}]}
+    ]
+  }
+}

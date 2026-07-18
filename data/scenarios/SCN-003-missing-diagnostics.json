@@ -1,0 +1,12 @@
+{
+  "$schema":"../../schemas/scenario.schema.json","scenario_id":"SCN-003","title":"Missing diagnostic settings on a disposable resource",
+  "execution":{"mode":"CONTROLLED_ARM_TRANSCRIPT","detection_engine":"AzureEvidenceCollector transcript plus aica.evaluation.RuleEngine:R-AU-2-01","azure_live_required_for_release":true,"azure_live_evidence_checked_in":false,"limitation":"CI executes a scoped synthetic ARM transcript; it does not prove live diagnostic-setting removal, restoration, or Azure cleanup."},
+  "safety":{"data_classification":"SYNTHETIC","allowed_resource_groups":["rg-aica-fixture-eus2"],"prohibited_actions":["disable logging on persistent or shared resources","modify the existing Sentinel workspace","send sensitive content to logs"],"expires_after_minutes":45},
+  "preconditions":["Deploy a low-cost disposable resource that supports diagnostics","Configure its approved diagnostic destination","Capture a PASS baseline"],
+  "baseline":["Collect diagnostic settings and destination freshness","Require AU-2.1 and SI-4.1 PASS"],
+  "injection":["Remove the fixture diagnostic setting through the scenario template only"],
+  "expected":{"objective_id":"AU-2.1","status":"FAIL","observation":"One disposable resource has no required diagnostic setting.","finding_severity":"MODERATE","risk_range":[5,9]},
+  "remediation":["Reapply the version-controlled diagnostic setting","Confirm the approved workspace destination"],
+  "retest":["Collect fresh configuration","Submit one synthetic event if supported and confirm query freshness"],
+  "cleanup":["Delete the disposable resource and its setting","Verify no scenario-tagged resource remains","Do not alter shared workspace retention or content"]
+}

@@ -1,0 +1,91 @@
+name: Prepare public Console handoff
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - apps/console/**
+      - data/sample-runs/**
+      - data/ai-evaluations/**
+      - data/mapping-benchmark/**
+      - data/collector-fixtures/baseline/ai.behavioral_evaluation.json
+      - assurance/scripts/validate_artifacts.py
+      - assurance/scripts/score_mapping_benchmark.py
+      - src/aica/collectors/ai.py
+      - src/aica/evaluation/behavioral.py
+      - src/aica/evidence/**
+      - src/aica/domain/**
+      - pyproject.toml
+      - package.json
+      - package-lock.json
+      - .github/workflows/public-console-handoff.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: public-console-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-public-console:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: '3.12'
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Validate the signed public source artifacts
+        env:
+          PYTHONPATH: src
+        shell: bash
+        run: |
+          python -m pip install -e '.[dev]'
+          python assurance/scripts/validate_artifacts.py
+          python assurance/scripts/score_mapping_benchmark.py
+      - name: Build the sanitized read-only mode
+        env:
+          VITE_DATA_SOURCE: fixtures
+          VITE_PUBLIC_MODE: 'true'
+        shell: bash
+        run: |
+          npm ci
+          npm run build --workspace @aica/assurance-console
+      - name: Enforce the public artifact boundary
+        shell: bash
+        run: |
+          if rg --pcre2 --hidden --glob '!**/*.map' --glob '!**/node_modules/**' \
+            '(?i)(/subscriptions/[0-9a-f-]{36}|/tenants/[0-9a-f-]{36}|client[_-]?secret|bearer[[:space:]]+[a-z0-9._-]+|BEGIN (RSA|EC|OPENSSH)? ?PRIVATE KEY|"user_input"[[:space:]]*:|raw[_-]?(prompt|response)"?[[:space:]]*:[[:space:]]*"(?!\[REDACTED\]")[^"]+|@(gmail|outlook)\.com)' \
+            data/sample-runs apps/console/dist; then
+            echo 'private identifier, secret, or raw trace found in public artifacts' >&2
+            exit 1
+          fi
+          if rg --pcre2 '"(evidence_excerpt|required_citations|suggested_citations)"[[:space:]]*:' \
+            apps/console/dist; then
+            echo 'the full mapping benchmark was embedded instead of signed derived metrics' >&2
+            exit 1
+          fi
+          mkdir -p /tmp/public-console/site
+          cp -R apps/console/dist/. /tmp/public-console/site/
+          (cd /tmp/public-console && find site -type f -print0 | sort -z | xargs -0 sha256sum > PUBLIC-CONSOLE-SHA256SUMS)
+          printf '%s\n' \
+            'Sanitized read-only build; no Azure mutation was performed.' \
+            'After the Free Static Web App exists through Azure MCP, publish this exact artifact through the approved content path.' \
+            'Preserve PUBLIC-CONSOLE-SHA256SUMS as release evidence.' > /tmp/public-console/README.txt
+      - name: Upload immutable public Console handoff
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: public-console-${{ github.sha }}
+          path: /tmp/public-console
+          if-no-files-found: error
+          retention-days: 14

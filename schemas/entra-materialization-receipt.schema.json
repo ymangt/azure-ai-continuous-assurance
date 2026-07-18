@@ -1,0 +1,59 @@
+{
+  "$id": "https://example.invalid/aica/schemas/entra-materialization-receipt.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "assignment": {
+      "additionalProperties": false,
+      "properties": {
+        "assignmentId": { "format": "uuid", "type": "string" },
+        "principal": { "minLength": 1, "type": "string" },
+        "principalIdSha256": { "pattern": "^[0-9a-f]{64}$", "type": "string" },
+        "principalType": { "enum": ["User", "Group", "ServicePrincipal"] },
+        "roleValue": { "enum": ["Assurance.Assessor", "Assurance.Reviewer", "Assurance.RiskApprover", "Assurance.AuthorizationProbe", "Assurance.WorkloadInvoker"] },
+        "status": { "const": "ACTIVE" }
+      },
+      "required": ["assignmentId", "principal", "principalIdSha256", "principalType", "roleValue", "status"],
+      "type": "object"
+    },
+    "application": {
+      "additionalProperties": false,
+      "properties": {
+        "accessTokenIssuanceEnabled": { "const": false },
+        "appRoleAssignmentRequired": { "const": true },
+        "appRoles": { "items": { "type": "object" }, "maxItems": 4, "minItems": 4, "type": "array" },
+        "applicationClientId": { "format": "uuid", "type": "string" },
+        "applicationObjectId": { "format": "uuid", "type": "string" },
+        "assignments": { "items": { "$ref": "#/$defs/assignment" }, "minItems": 2, "type": "array" },
+        "authorizedAudiences": { "items": { "pattern": "^api://[0-9a-f-]{36}$", "type": "string" }, "maxItems": 1, "minItems": 1, "type": "array" },
+        "clientSecretCount": { "const": 0 },
+        "displayName": { "minLength": 1, "type": "string" },
+        "idTokenIssuanceEnabled": { "const": true },
+        "identifierUris": { "items": { "pattern": "^api://[0-9a-f-]{36}$", "type": "string" }, "maxItems": 1, "minItems": 1, "type": "array" },
+        "key": { "enum": ["assurance-console", "policy-assistant"] },
+        "mcpReadbackVerified": { "const": true },
+        "redirectUris": { "items": { "format": "uri", "pattern": "^https://.+/\\.auth/login/aad/callback$", "type": "string" }, "maxItems": 1, "minItems": 1, "type": "array" },
+        "servicePrincipalObjectId": { "format": "uuid", "type": "string" },
+        "signInAudience": { "const": "AzureADMyOrg" }
+      },
+      "required": ["accessTokenIssuanceEnabled", "appRoleAssignmentRequired", "appRoles", "applicationClientId", "applicationObjectId", "assignments", "authorizedAudiences", "clientSecretCount", "displayName", "idTokenIssuanceEnabled", "identifierUris", "key", "mcpReadbackVerified", "redirectUris", "servicePrincipalObjectId", "signInAudience"],
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Private Azure MCP readback proving exact Entra applications, roles, and assignments before workload deployment.",
+  "properties": {
+    "applications": { "items": { "$ref": "#/$defs/application" }, "maxItems": 2, "minItems": 2, "type": "array" },
+    "environment": { "enum": ["dev", "demo"] },
+    "foundationOutputsSha256": { "pattern": "^[0-9a-f]{64}$", "type": "string" },
+    "materializedAt": { "format": "date-time", "type": "string" },
+    "materializedHandoffSha256": { "pattern": "^[0-9a-f]{64}$", "type": "string" },
+    "mcpEvidenceSha256": { "pattern": "^[0-9a-f]{64}$", "type": "string" },
+    "mutationChannel": { "const": "Azure MCP" },
+    "schemaVersion": { "const": "1.0.0" },
+    "specSha256": { "pattern": "^[0-9a-f]{64}$", "type": "string" },
+    "status": { "const": "VERIFIED" },
+    "tenantId": { "format": "uuid", "type": "string" }
+  },
+  "required": ["applications", "environment", "foundationOutputsSha256", "materializedAt", "materializedHandoffSha256", "mcpEvidenceSha256", "mutationChannel", "schemaVersion", "specSha256", "status", "tenantId"],
+  "type": "object"
+}

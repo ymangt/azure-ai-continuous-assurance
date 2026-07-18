@@ -1,0 +1,123 @@
+{
+  "$id": "https://example.invalid/aica/schemas/entra-app-registration-handoff.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "appRole": {
+      "additionalProperties": false,
+      "properties": {
+        "allowedMemberTypes": {
+          "oneOf": [
+            { "const": ["User"] },
+            { "const": ["Application"] }
+          ]
+        },
+        "description": { "minLength": 20, "type": "string" },
+        "displayName": { "minLength": 1, "type": "string" },
+        "id": { "format": "uuid", "type": "string" },
+        "isEnabled": { "const": true },
+        "value": { "enum": ["Assurance.Assessor", "Assurance.Reviewer", "Assurance.RiskApprover", "Assurance.AuthorizationProbe", "Assurance.WorkloadInvoker"] }
+      },
+      "required": ["allowedMemberTypes", "description", "displayName", "id", "isEnabled", "value"],
+      "type": "object"
+    },
+    "application": {
+      "additionalProperties": false,
+      "properties": {
+        "appRoles": { "items": { "$ref": "#/$defs/appRole" }, "maxItems": 4, "minItems": 4, "type": "array" },
+        "assignmentExpectations": {
+          "additionalProperties": false,
+          "properties": {
+            "appRoleAssignmentRequired": { "const": true },
+            "noDefaultAccess": { "const": true },
+            "personaAssignments": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "minimumAssignments": { "minimum": 0, "type": "integer" },
+                  "principalType": { "const": "UserOrGroup" },
+                  "role": { "enum": ["Assurance.Assessor", "Assurance.Reviewer", "Assurance.RiskApprover"] },
+                  "use": { "minLength": 1, "type": "string" }
+                },
+                "required": ["minimumAssignments", "principalType", "role", "use"],
+                "type": "object"
+              },
+              "minItems": 3,
+              "type": "array"
+            },
+            "prohibitedPrincipals": { "items": { "minLength": 1, "type": "string" }, "minItems": 1, "type": "array" },
+            "workloadAssignments": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "minimumAssignments": { "minimum": 1, "type": "integer" },
+                  "principal": { "enum": ["assistant managed identity", "collector managed identity"] },
+                  "principalType": { "const": "ServicePrincipal" },
+                  "role": { "enum": ["Assurance.AuthorizationProbe", "Assurance.WorkloadInvoker"] },
+                  "use": { "minLength": 1, "type": "string" }
+                },
+                "required": ["minimumAssignments", "principal", "principalType", "role", "use"],
+                "type": "object"
+              },
+              "minItems": 1,
+              "type": "array"
+            }
+          },
+          "required": ["appRoleAssignmentRequired", "noDefaultAccess", "personaAssignments", "prohibitedPrincipals", "workloadAssignments"],
+          "type": "object"
+        },
+        "authorizedAudiences": { "const": ["api://{clientId}"] },
+        "clientIdParameter": { "enum": ["assuranceApiClientId", "assistantClientId"] },
+        "displayNameTemplate": { "pattern": "\\{environment\\}$", "type": "string" },
+        "easyAuthAllowedClientApplications": { "const": ["{clientId}"] },
+        "identifierUriTemplate": { "const": "api://{clientId}" },
+        "key": { "enum": ["assurance-console", "policy-assistant"] },
+        "redirectUri": {
+          "additionalProperties": false,
+          "properties": {
+            "foundationOutput": { "enum": ["assuranceAuthRedirectUri", "assistantAuthRedirectUri"] },
+            "requiredSuffix": { "const": "/.auth/login/aad/callback" },
+            "type": { "const": "Web" }
+          },
+          "required": ["foundationOutput", "requiredSuffix", "type"],
+          "type": "object"
+        },
+        "roleClaimConsumer": { "minLength": 20, "type": "string" },
+        "runtimeSurface": { "minLength": 1, "type": "string" }
+      },
+      "required": ["appRoles", "assignmentExpectations", "authorizedAudiences", "clientIdParameter", "displayNameTemplate", "easyAuthAllowedClientApplications", "identifierUriTemplate", "key", "redirectUri", "roleClaimConsumer", "runtimeSurface"],
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "MCP-only external handoff for the two single-tenant Entra registrations used by Container Apps Easy Auth.",
+  "properties": {
+    "$schema": { "type": "string" },
+    "applications": { "items": { "$ref": "#/$defs/application" }, "maxItems": 2, "minItems": 2, "type": "array" },
+    "credentialPolicy": {
+      "additionalProperties": false,
+      "properties": {
+        "accessTokenIssuanceEnabled": { "const": false },
+        "clientSecretsAllowed": { "const": false },
+        "idTokenIssuanceEnabled": { "const": true },
+        "note": { "minLength": 20, "type": "string" }
+      },
+      "required": ["accessTokenIssuanceEnabled", "clientSecretsAllowed", "idTokenIssuanceEnabled", "note"],
+      "type": "object"
+    },
+    "externalGate": {
+      "additionalProperties": false,
+      "properties": {
+        "mutationChannel": { "const": "Azure MCP only" },
+        "requiredEvidence": { "items": { "minLength": 1, "type": "string" }, "minItems": 5, "type": "array" },
+        "statusUntilReceipt": { "const": "BLOCKED" }
+      },
+      "required": ["mutationChannel", "requiredEvidence", "statusUntilReceipt"],
+      "type": "object"
+    },
+    "schemaVersion": { "const": "1.0.0" },
+    "signInAudience": { "const": "AzureADMyOrg" },
+    "tenantScope": { "const": "single tenant" }
+  },
+  "required": ["$schema", "applications", "credentialPolicy", "externalGate", "schemaVersion", "signInAudience", "tenantScope"],
+  "type": "object"
+}

@@ -1,0 +1,12 @@
+{
+  "status": "Succeeded",
+  "properties": {
+    "changes": [
+      {
+        "changeType": "Delete",
+        "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-aica-control-cc/providers/Microsoft.KeyVault/vaults/kv-aica-test",
+        "before": {"type": "Microsoft.KeyVault/vaults"}
+      }
+    ]
+  }
+}

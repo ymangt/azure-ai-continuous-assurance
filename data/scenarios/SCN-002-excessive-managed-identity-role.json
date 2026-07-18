@@ -1,0 +1,12 @@
+{
+  "$schema":"../../schemas/scenario.schema.json","scenario_id":"SCN-002","title":"Excessive role on an inert managed identity",
+  "execution":{"mode":"CONTROLLED_ARM_TRANSCRIPT","detection_engine":"AzureEvidenceCollector transcript plus aica.evaluation.RuleEngine:R-AC-6-01","azure_live_required_for_release":true,"azure_live_evidence_checked_in":false,"limitation":"CI executes a scoped synthetic ARM transcript; it does not prove that an Azure identity or role assignment was created or deleted."},
+  "safety":{"data_classification":"SYNTHETIC","allowed_resource_groups":["rg-aica-fixture-eus2"],"prohibited_actions":["create credentials or federated trust","attach the identity to compute","assign at subscription scope","grant access to non-synthetic data"],"expires_after_minutes":45},
+  "preconditions":["Create an unattached user-assigned identity with no credentials or federated trust","Confirm Reader is the clean baseline role","Apply owner, scenario, expiry, and synthetic tags"],
+  "baseline":["Collect effective role assignments","Require AC-6.1 PASS"],
+  "injection":["Assign a broader fixture-resource-group data role than the identity needs","Keep the identity unattached and unable to authenticate"],
+  "expected":{"objective_id":"AC-6.1","status":"FAIL","observation":"An inert identity has a role broader than its documented task.","finding_severity":"MODERATE","risk_range":[5,9]},
+  "remediation":["Remove the broad assignment","Retain or restore only Reader if required by the scenario"],
+  "retest":["Collect effective assignments and identity attachment inventory","Require no broad assignment and no attachment"],
+  "cleanup":["Remove every scenario role assignment before deleting the identity","Delete the identity","Verify no scenario-tagged principal or assignment remains"]
+}

@@ -1,0 +1,10 @@
+{
+  "resources": [
+    {
+      "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
+      "name": "fixture-untagged",
+      "tags": {"fixture": "true", "scenarioId": "excessive-managed-identity-privilege"},
+      "properties": {}
+    }
+  ]
+}

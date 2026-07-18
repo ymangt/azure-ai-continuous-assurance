@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/aica/supply-chain-image-set.schema.json",
+  "title": "Verified supply-chain image set",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema", "images", "mutationChannel", "schemaVersion", "sourceCommit", "status", "workflowPath", "workflowRunId"],
+  "properties": {
+    "$schema": {"const": "../../schemas/supply-chain-image-set.schema.json"},
+    "schemaVersion": {"const": "1.0.0"},
+    "status": {"const": "VERIFIED"},
+    "mutationChannel": {"const": "GitHub Actions read-only"},
+    "workflowPath": {"const": ".github/workflows/supply-chain.yml"},
+    "workflowRunId": {"type": "integer", "minimum": 1},
+    "sourceCommit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "images": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["assuranceApiImage", "assuranceJobImage", "consoleUiImage", "assistantUiImage"],
+      "properties": {
+        "assuranceApiImage": {
+          "allOf": [
+            {"$ref": "#/$defs/image"},
+            {"properties": {"component": {"const": "api"}, "dockerfile": {"const": "deploy/api.Dockerfile"}, "image": {"pattern": "^ghcr\\.io/[a-z0-9._-]+/aica-api@sha256:[0-9a-f]{64}$"}}}
+          ]
+        },
+        "assuranceJobImage": {
+          "allOf": [
+            {"$ref": "#/$defs/image"},
+            {"properties": {"component": {"const": "job"}, "dockerfile": {"const": "deploy/job.Dockerfile"}, "image": {"pattern": "^ghcr\\.io/[a-z0-9._-]+/aica-job@sha256:[0-9a-f]{64}$"}}}
+          ]
+        },
+        "consoleUiImage": {
+          "allOf": [
+            {"$ref": "#/$defs/image"},
+            {"properties": {"component": {"const": "apps-console"}, "dockerfile": {"const": "apps/console/Dockerfile"}, "image": {"pattern": "^ghcr\\.io/[a-z0-9._-]+/aica-apps-console@sha256:[0-9a-f]{64}$"}}}
+          ]
+        },
+        "assistantUiImage": {
+          "allOf": [
+            {"$ref": "#/$defs/image"},
+            {"properties": {"component": {"const": "apps-policy-assistant"}, "dockerfile": {"const": "apps/policy-assistant/Dockerfile"}, "image": {"pattern": "^ghcr\\.io/[a-z0-9._-]+/aica-apps-policy-assistant@sha256:[0-9a-f]{64}$"}}}
+          ]
+        }
+      }
+    }
+  },
+  "$defs": {
+    "image": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["component", "digest", "dockerfile", "image", "recordSha256"],
+      "properties": {
+        "component": {"type": "string", "minLength": 1},
+        "dockerfile": {"type": "string", "minLength": 1},
+        "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+        "image": {"type": "string", "pattern": "^ghcr\\.io/[a-z0-9._-]+/[a-z0-9._/-]+@sha256:[0-9a-f]{64}$"},
+        "recordSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    }
+  }
+}

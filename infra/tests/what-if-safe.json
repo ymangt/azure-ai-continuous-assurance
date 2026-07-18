@@ -1,0 +1,18 @@
+{
+  "status": "Succeeded",
+  "properties": {
+    "changes": [
+      {
+        "changeType": "Create",
+        "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-aica-control-cc/providers/Microsoft.Storage/storageAccounts/staicasafe",
+        "after": {
+          "type": "Microsoft.Storage/storageAccounts",
+          "properties": {
+            "allowBlobPublicAccess": false,
+            "allowSharedKeyAccess": false
+          }
+        }
+      }
+    ]
+  }
+}

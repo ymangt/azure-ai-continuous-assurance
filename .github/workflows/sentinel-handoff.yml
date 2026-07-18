@@ -1,0 +1,70 @@
+name: Prepare Sentinel content handoff
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - sentinel/**
+      - infra/modules/sentinel-content.bicep
+      - .github/workflows/sentinel-handoff.yml
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: sentinel-content
+  cancel-in-progress: true
+
+jobs:
+  handoff:
+    runs-on: ubuntu-24.04
+    environment: sentinel-content
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+      - name: Authenticate Sentinel content identity with OIDC
+        uses: azure/login@532459ea530d8321f2fb9bb10d1e0bcf23869a43
+        with:
+          client-id: ${{ vars.AZURE_SENTINEL_CONTENT_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - name: Verify the allowlisted existing workspace (read-only)
+        shell: bash
+        run: |
+          test "${{ vars.AICA_SENTINEL_RESOURCE_GROUP }}" = rg-sc200-sentinel-lab
+          test "${{ vars.AICA_SENTINEL_WORKSPACE }}" = law-sc200-sentinel-lab
+          az monitor log-analytics workspace show \
+            --resource-group rg-sc200-sentinel-lab \
+            --workspace-name law-sc200-sentinel-lab \
+            --query '{id:id,name:name,location:location}' \
+            --output json > /tmp/sentinel-workspace.json
+      - name: Install pinned Bicep CLI
+        shell: bash
+        run: |
+          curl --fail --location --silent --show-error --output /tmp/bicep \
+            https://github.com/Azure/bicep/releases/download/v0.45.15/bicep-linux-x64
+          echo 'ff5b194b042c220df4a50d6768ed1d6c39a32894bfdc4ff83d62b115d966a7ce  /tmp/bicep' | sha256sum --check
+          chmod +x /tmp/bicep
+      - name: Validate and package immutable content
+        shell: bash
+        run: |
+          python scripts/azure/validate-content.py
+          mkdir -p /tmp/sentinel-handoff/content
+          /tmp/bicep build infra/modules/sentinel-content.bicep --outfile /tmp/sentinel-handoff/sentinel-template.json
+          cp -R sentinel/. /tmp/sentinel-handoff/content/
+          cp /tmp/sentinel-workspace.json /tmp/sentinel-handoff/workspace.json
+          (cd /tmp/sentinel-handoff && find . -type f ! -name SHA256SUMS -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS)
+          printf '%s\n' \
+            'No Sentinel or Azure resource was changed.' \
+            'Submit the exact compiled template and hashes to Azure MCP What-If/deployment.' \
+            'Keep the deployment result and post-deploy KQL tests as private assessment evidence.' > /tmp/sentinel-handoff/README.txt
+      - name: Upload Sentinel MCP handoff
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: sentinel-mcp-handoff-${{ github.run_id }}
+          path: /tmp/sentinel-handoff
+          if-no-files-found: error
+          retention-days: 7

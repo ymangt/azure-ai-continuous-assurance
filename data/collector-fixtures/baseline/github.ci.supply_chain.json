@@ -1,0 +1,10 @@
+{
+  "source": "github.ci.supply_chain",
+  "query": "sanitized successful supply-chain run and retained artifact projection",
+  "classification": "PUBLIC_SANITIZED",
+  "captured_at": "2026-06-01T11:58:00Z",
+  "payload": {
+    "workflow_runs": [{"conclusion": "success", "head_sha": "1111111111111111111111111111111111111111"}],
+    "artifacts": [{"name": "sbom-api", "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "expired": false}]
+  }
+}

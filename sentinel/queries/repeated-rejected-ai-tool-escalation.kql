@@ -1,0 +1,7 @@
+AicaToolSecurity_CL
+| where TimeGenerated >= ago(15m)
+| where EventName =~ 'tool_authorization'
+| where ToolResultStatus =~ 'REJECTED' or AuthorizationDecision =~ 'DENIED'
+| summarize RejectionCount=count(), Tools=make_set(ToolName, 10), ConfirmationStates=make_set(ConfirmationState, 10), CorrelationIds=make_set(CorrelationId, 20), EvaluationIds=make_set(EvaluationId, 20) by UserPseudonym, SessionId, bin(TimeGenerated, 5m)
+| where RejectionCount >= 3
+| project TimeGenerated, UserPseudonym, SessionId, RejectionCount, Tools, ConfirmationStates, CorrelationIds, EvaluationIds

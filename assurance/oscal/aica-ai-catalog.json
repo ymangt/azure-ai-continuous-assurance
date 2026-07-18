@@ -1,0 +1,62 @@
+{
+  "catalog": {
+    "uuid": "10000000-0000-4000-8000-000000000001",
+    "metadata": {
+      "title": "AICA Custom AI Assurance Control Catalog",
+      "published": "2026-05-15T12:00:00Z",
+      "last-modified": "2026-05-15T12:00:00Z",
+      "version": "1.0.0",
+      "oscal-version": "1.2.2",
+      "roles": [{"id":"content-author","title":"Content Author"}],
+      "parties": [{"uuid":"10000000-0000-4000-8000-000000000099","type":"organization","name":"AICA Project (simulated)"}],
+      "responsible-parties": [{"role-id":"content-author","party-uuids":["10000000-0000-4000-8000-000000000099"]}],
+      "remarks": "Project-specific controls informed by the NIST AI RMF Generative AI Profile. They are not NIST controls."
+    },
+    "groups": [{
+      "id": "ai",
+      "title": "Artificial Intelligence Assurance",
+      "controls": [
+        {
+          "id":"ai-gv-01","title":"AI Use Governance and Accountability",
+          "props":[{"name":"label","value":"AI-GV-01"}],
+          "parts":[
+            {"id":"ai-gv-01_smt","name":"statement","prose":"Define and communicate intended and prohibited uses, accountable owners, risk tolerance, human decision authority, and escalation paths for the AI system."},
+            {"id":"ai-gv-01_gdn","name":"guidance","prose":"AI output is advisory. A human reviewer retains authority for assessment conclusions, exceptions, risk acceptance, and finding closure."}
+          ]
+        },
+        {
+          "id":"ai-dp-01","title":"Grounding Data Provenance and Protection",
+          "props":[{"name":"label","value":"AI-DP-01"}],
+          "parts":[
+            {"id":"ai-dp-01_smt","name":"statement","prose":"Record source, owner, classification, integrity, permitted use, and trust boundary for grounding data, and test controls against poisoning and indirect prompt injection."},
+            {"id":"ai-dp-01_gdn","name":"guidance","prose":"Treat retrieved content as untrusted data and never as instructions that may override system or developer policy."}
+          ]
+        },
+        {
+          "id":"ai-ac-01","title":"AI Tool Authorization and Confirmation",
+          "props":[{"name":"label","value":"AI-AC-01"}],
+          "parts":[
+            {"id":"ai-ac-01_smt","name":"statement","prose":"Authorize tools independently of model output, grant least privilege, validate arguments, and require explicit user confirmation before consequential actions."},
+            {"id":"ai-ac-01_gdn","name":"guidance","prose":"A model request is not authorization. Denied or unconfirmed requests must not execute and must create auditable telemetry."}
+          ]
+        },
+        {
+          "id":"ai-te-01","title":"AI Evaluation and Release Gate",
+          "props":[{"name":"label","value":"AI-TE-01"}],
+          "parts":[
+            {"id":"ai-te-01_smt","name":"statement","prose":"Run a fixed, versioned evaluation set before deployment of material model, prompt, retrieval, grounding-data, guardrail, or tool changes and enforce documented release thresholds."},
+            {"id":"ai-te-01_gdn","name":"guidance","prose":"Record failures and limitations honestly. AI-generated mappings remain suggestions until reviewed and may not determine control verdicts."}
+          ]
+        },
+        {
+          "id":"ai-mo-01","title":"AI Monitoring and Escalation",
+          "props":[{"name":"label","value":"AI-MO-01"}],
+          "parts":[
+            {"id":"ai-mo-01_smt","name":"statement","prose":"Monitor abuse, grounding, guardrail, tool, model, and configuration events; detect material change; preserve evidence; and escalate incidents under defined thresholds."},
+            {"id":"ai-mo-01_gdn","name":"guidance","prose":"Routine telemetry should minimize content and personal data while controlled evaluation evidence remains access restricted."}
+          ]
+        }
+      ]
+    }]
+  }
+}

@@ -1,0 +1,6 @@
+AzureActivity
+| where TimeGenerated >= ago(30m)
+| where ActivityStatusValue =~ 'Success'
+| where OperationNameValue =~ 'MICROSOFT.INSIGHTS/DIAGNOSTICSETTINGS/DELETE'
+| extend ParsedProperties = parse_json(Properties_d)
+| project TimeGenerated, Caller, CallerIpAddress, CorrelationId, ResourceId, ResourceGroup, SubscriptionId, OperationNameValue, DiagnosticTarget=tostring(ParsedProperties.resource)

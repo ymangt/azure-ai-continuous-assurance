@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Policy assistant shield">
+  <rect width="64" height="64" rx="14" fill="#102a43"/>
+  <path d="M32 10 51 17v14c0 12-7.7 19.9-19 23-11.3-3.1-19-11-19-23V17l19-7Z" fill="#14b8a6"/>
+  <path d="M22 25h20M22 32h15M22 39h10" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+</svg>

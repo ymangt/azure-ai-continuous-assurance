@@ -1,0 +1,12 @@
+{
+  "$schema":"../../schemas/scenario.schema.json","scenario_id":"SCN-005","title":"Unpinned workflow action or floating container tag",
+  "execution":{"mode":"OFFLINE_REGO","detection_engine":"OPA/Conftest policy aica.azure","azure_live_required_for_release":false,"azure_live_evidence_checked_in":false,"limitation":"The mutable reference remains an inert fixture and is never pulled, executed, or exposed to GitHub Actions discovery."},
+  "safety":{"data_classification":"SYNTHETIC","allowed_resource_groups":["repository fixture files only"],"prohibited_actions":["execute the untrusted workflow","pull or deploy the floating image","modify the real default-branch workflow"],"expires_after_minutes":15},
+  "preconditions":["Create a non-executable workflow fixture excluded from Actions discovery","Capture a pinned commit-SHA and image-digest baseline"],
+  "baseline":["Run supply-chain policy against compliant fixtures","Require SA-11.1 PASS"],
+  "injection":["Use actions/checkout@main or an image :latest only in the fixture","Evaluate statically"],
+  "expected":{"objective_id":"SA-11.1","status":"FAIL","observation":"A fixture references mutable software supply-chain coordinates.","finding_severity":"MODERATE","risk_range":[5,9]},
+  "remediation":["Replace the action with a full commit SHA and image with sha256 digest"],
+  "retest":["Require the remediated fixture to pass","Require deliberately negative regression fixture to fail"],
+  "cleanup":["Verify no workflow run was created","Retain only inert fixtures under the test path"]
+}

@@ -1,0 +1,14 @@
+{
+  "resources": [
+    {
+      "type": "Microsoft.App/containerApps",
+      "name": "fixture-floating-image",
+      "properties": {
+        "template": {
+          "containers": [{"image": "ghcr.io/example/aica:latest"}],
+          "scale": {"minReplicas": 0, "maxReplicas": 2}
+        }
+      }
+    }
+  ]
+}

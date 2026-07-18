@@ -1,0 +1,1642 @@
+{
+  "$defs": {
+    "AssessmentMethod": {
+      "enum": [
+        "EXAMINE",
+        "INTERVIEW",
+        "TEST",
+        "HYBRID"
+      ],
+      "title": "AssessmentMethod",
+      "type": "string"
+    },
+    "AssessmentRun": {
+      "additionalProperties": false,
+      "properties": {
+        "collector_version": {
+          "minLength": 1,
+          "title": "Collector Version",
+          "type": "string"
+        },
+        "ended_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ended At"
+        },
+        "estimated_cost_cad": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Estimated Cost Cad",
+          "type": "number"
+        },
+        "evaluator_version": {
+          "minLength": 1,
+          "title": "Evaluator Version",
+          "type": "string"
+        },
+        "git_commit": {
+          "pattern": "^[a-fA-F0-9]{7,40}$",
+          "title": "Git Commit",
+          "type": "string"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "manifest_digest": {
+          "anyOf": [
+            {
+              "pattern": "^[a-f0-9]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Manifest Digest"
+        },
+        "observation_window_end": {
+          "format": "date-time",
+          "title": "Observation Window End",
+          "type": "string"
+        },
+        "observation_window_start": {
+          "format": "date-time",
+          "title": "Observation Window Start",
+          "type": "string"
+        },
+        "prior_run_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Prior Run Id"
+        },
+        "scope": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Scope",
+          "type": "array"
+        },
+        "started_at": {
+          "format": "date-time",
+          "title": "Started At",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/RunStatus"
+        },
+        "trigger": {
+          "enum": [
+            "manual",
+            "scheduled",
+            "change",
+            "retest",
+            "fixture"
+          ],
+          "title": "Trigger",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "trigger",
+        "scope",
+        "observation_window_start",
+        "observation_window_end",
+        "git_commit",
+        "collector_version",
+        "evaluator_version",
+        "started_at",
+        "status"
+      ],
+      "title": "AssessmentRun",
+      "type": "object"
+    },
+    "Classification": {
+      "enum": [
+        "PUBLIC",
+        "INTERNAL",
+        "CONFIDENTIAL",
+        "RESTRICTED_TEST_EVIDENCE"
+      ],
+      "title": "Classification",
+      "type": "string"
+    },
+    "ControlAssessment": {
+      "additionalProperties": false,
+      "properties": {
+        "conclusion": {
+          "$ref": "#/$defs/Effectiveness"
+        },
+        "coverage_percent": {
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Coverage Percent",
+          "type": "number"
+        },
+        "design_effectiveness": {
+          "$ref": "#/$defs/Effectiveness"
+        },
+        "evidence_freshness": {
+          "$ref": "#/$defs/EvidenceFreshness"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "objective_id": {
+          "minLength": 1,
+          "title": "Objective Id",
+          "type": "string"
+        },
+        "operating_effectiveness": {
+          "$ref": "#/$defs/Effectiveness"
+        },
+        "rationale": {
+          "minLength": 1,
+          "title": "Rationale",
+          "type": "string"
+        },
+        "review_state": {
+          "$ref": "#/$defs/ReviewState",
+          "default": "SUGGESTED"
+        },
+        "reviewer": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reviewer"
+        },
+        "run_id": {
+          "minLength": 1,
+          "title": "Run Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "run_id",
+        "objective_id",
+        "design_effectiveness",
+        "operating_effectiveness",
+        "coverage_percent",
+        "conclusion",
+        "rationale",
+        "evidence_freshness"
+      ],
+      "title": "ControlAssessment",
+      "type": "object"
+    },
+    "ControlObjective": {
+      "additionalProperties": false,
+      "properties": {
+        "automated": {
+          "title": "Automated",
+          "type": "boolean"
+        },
+        "cadence": {
+          "minLength": 1,
+          "title": "Cadence",
+          "type": "string"
+        },
+        "crosswalk": {
+          "additionalProperties": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "title": "Crosswalk",
+          "type": "object"
+        },
+        "evidence_requirements": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence Requirements",
+          "type": "array"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "limitations": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Limitations",
+          "type": "array"
+        },
+        "methods": {
+          "items": {
+            "$ref": "#/$defs/AssessmentMethod"
+          },
+          "title": "Methods",
+          "type": "array"
+        },
+        "objective": {
+          "minLength": 1,
+          "title": "Objective",
+          "type": "string"
+        },
+        "owner": {
+          "minLength": 1,
+          "title": "Owner",
+          "type": "string"
+        },
+        "source_control": {
+          "minLength": 1,
+          "title": "Source Control",
+          "type": "string"
+        },
+        "subject_selector": {
+          "minLength": 1,
+          "title": "Subject Selector",
+          "type": "string"
+        },
+        "title": {
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "source_control",
+        "title",
+        "objective",
+        "methods",
+        "subject_selector",
+        "cadence",
+        "evidence_requirements",
+        "owner",
+        "automated"
+      ],
+      "title": "ControlObjective",
+      "type": "object"
+    },
+    "Effectiveness": {
+      "enum": [
+        "EFFECTIVE",
+        "PARTIALLY_EFFECTIVE",
+        "INEFFECTIVE",
+        "NOT_CONCLUDED"
+      ],
+      "title": "Effectiveness",
+      "type": "string"
+    },
+    "EvidenceFreshness": {
+      "enum": [
+        "FRESH",
+        "STALE",
+        "UNKNOWN"
+      ],
+      "title": "EvidenceFreshness",
+      "type": "string"
+    },
+    "EvidenceItem": {
+      "additionalProperties": false,
+      "properties": {
+        "authorized": {
+          "default": true,
+          "title": "Authorized",
+          "type": "boolean"
+        },
+        "blob_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Blob Version"
+        },
+        "captured_at": {
+          "format": "date-time",
+          "title": "Captured At",
+          "type": "string"
+        },
+        "classification": {
+          "$ref": "#/$defs/Classification"
+        },
+        "collection_error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Collection Error"
+        },
+        "collector_version": {
+          "minLength": 1,
+          "title": "Collector Version",
+          "type": "string"
+        },
+        "freshness": {
+          "$ref": "#/$defs/EvidenceFreshness"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "media_type": {
+          "minLength": 1,
+          "title": "Media Type",
+          "type": "string"
+        },
+        "observation_window_end": {
+          "format": "date-time",
+          "title": "Observation Window End",
+          "type": "string"
+        },
+        "observation_window_start": {
+          "format": "date-time",
+          "title": "Observation Window Start",
+          "type": "string"
+        },
+        "payload": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "items": {},
+              "type": "array"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Payload"
+        },
+        "private_artifact_uri": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "format": "uri",
+              "maxLength": 2083,
+              "minLength": 1,
+              "type": "string"
+            }
+          ],
+          "title": "Private Artifact Uri"
+        },
+        "query_digest": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Query Digest",
+          "type": "string"
+        },
+        "redaction_profile": {
+          "minLength": 1,
+          "title": "Redaction Profile",
+          "type": "string"
+        },
+        "sanitized_sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[a-f0-9]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Sanitized Sha256"
+        },
+        "scope": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Scope",
+          "type": "array"
+        },
+        "sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "source": {
+          "minLength": 1,
+          "title": "Source",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "source",
+        "scope",
+        "captured_at",
+        "observation_window_start",
+        "observation_window_end",
+        "query_digest",
+        "collector_version",
+        "private_artifact_uri",
+        "media_type",
+        "sha256",
+        "classification",
+        "freshness",
+        "redaction_profile"
+      ],
+      "title": "EvidenceItem",
+      "type": "object"
+    },
+    "ExceptionRecord": {
+      "additionalProperties": false,
+      "properties": {
+        "approved_at": {
+          "format": "date-time",
+          "title": "Approved At",
+          "type": "string"
+        },
+        "approver": {
+          "minLength": 1,
+          "title": "Approver",
+          "type": "string"
+        },
+        "artifact_hash": {
+          "anyOf": [
+            {
+              "pattern": "^[a-f0-9]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Artifact Hash"
+        },
+        "compensating_controls": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Compensating Controls",
+          "type": "array"
+        },
+        "expires_at": {
+          "format": "date-time",
+          "title": "Expires At",
+          "type": "string"
+        },
+        "finding_id": {
+          "minLength": 1,
+          "title": "Finding Id",
+          "type": "string"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "rationale": {
+          "minLength": 1,
+          "title": "Rationale",
+          "type": "string"
+        },
+        "review_cadence": {
+          "minLength": 1,
+          "title": "Review Cadence",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "finding_id",
+        "approver",
+        "rationale",
+        "compensating_controls",
+        "approved_at",
+        "expires_at",
+        "review_cadence"
+      ],
+      "title": "ExceptionRecord",
+      "type": "object"
+    },
+    "Finding": {
+      "additionalProperties": false,
+      "properties": {
+        "affected_assets": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Affected Assets",
+          "type": "array"
+        },
+        "affected_controls": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Affected Controls",
+          "type": "array"
+        },
+        "cause": {
+          "minLength": 1,
+          "title": "Cause",
+          "type": "string"
+        },
+        "condition": {
+          "minLength": 1,
+          "title": "Condition",
+          "type": "string"
+        },
+        "consequence": {
+          "minLength": 1,
+          "title": "Consequence",
+          "type": "string"
+        },
+        "criteria": {
+          "minLength": 1,
+          "title": "Criteria",
+          "type": "string"
+        },
+        "evidence_refs": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "objective_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Objective Id"
+        },
+        "run_id": {
+          "minLength": 1,
+          "title": "Run Id",
+          "type": "string"
+        },
+        "severity": {
+          "$ref": "#/$defs/Severity"
+        },
+        "severity_rationale": {
+          "minLength": 1,
+          "title": "Severity Rationale",
+          "type": "string"
+        },
+        "status": {
+          "default": "OPEN",
+          "enum": [
+            "OPEN",
+            "READY_FOR_RETEST",
+            "CLOSED",
+            "REOPENED"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "title": {
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "run_id",
+        "title",
+        "criteria",
+        "condition",
+        "cause",
+        "consequence",
+        "affected_controls",
+        "affected_assets",
+        "severity",
+        "severity_rationale",
+        "evidence_refs"
+      ],
+      "title": "Finding",
+      "type": "object"
+    },
+    "Observation": {
+      "additionalProperties": false,
+      "properties": {
+        "condition": {
+          "minLength": 1,
+          "title": "Condition",
+          "type": "string"
+        },
+        "evidence_refs": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "objective_id": {
+          "minLength": 1,
+          "title": "Objective Id",
+          "type": "string"
+        },
+        "observed_at": {
+          "format": "date-time",
+          "title": "Observed At",
+          "type": "string"
+        },
+        "run_id": {
+          "minLength": 1,
+          "title": "Run Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "run_id",
+        "objective_id",
+        "condition",
+        "evidence_refs",
+        "observed_at"
+      ],
+      "title": "Observation",
+      "type": "object"
+    },
+    "Remediation": {
+      "additionalProperties": false,
+      "properties": {
+        "action": {
+          "minLength": 1,
+          "title": "Action",
+          "type": "string"
+        },
+        "artifact_hash": {
+          "anyOf": [
+            {
+              "pattern": "^[a-f0-9]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Artifact Hash"
+        },
+        "artifact_run_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Artifact Run Id"
+        },
+        "commit_or_pr": {
+          "minLength": 1,
+          "title": "Commit Or Pr",
+          "type": "string"
+        },
+        "evidence_refs": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "expected_version": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Expected Version"
+        },
+        "finding_id": {
+          "minLength": 1,
+          "title": "Finding Id",
+          "type": "string"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "owner": {
+          "minLength": 1,
+          "title": "Owner",
+          "type": "string"
+        },
+        "recorded_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Recorded At"
+        },
+        "recorded_by": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Recorded By"
+        },
+        "status": {
+          "enum": [
+            "PLANNED",
+            "IN_PROGRESS",
+            "READY_FOR_RETEST",
+            "VERIFIED"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "target_date": {
+          "format": "date-time",
+          "title": "Target Date",
+          "type": "string"
+        },
+        "version": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Version"
+        }
+      },
+      "required": [
+        "id",
+        "finding_id",
+        "owner",
+        "action",
+        "target_date",
+        "commit_or_pr",
+        "status"
+      ],
+      "title": "Remediation",
+      "type": "object"
+    },
+    "ResultStatus": {
+      "enum": [
+        "PASS",
+        "FAIL",
+        "ERROR",
+        "NOT_RUN",
+        "NOT_APPLICABLE"
+      ],
+      "title": "ResultStatus",
+      "type": "string"
+    },
+    "Retest": {
+      "additionalProperties": false,
+      "properties": {
+        "after_run_id": {
+          "minLength": 1,
+          "title": "After Run Id",
+          "type": "string"
+        },
+        "before_run_id": {
+          "minLength": 1,
+          "title": "Before Run Id",
+          "type": "string"
+        },
+        "decision": {
+          "enum": [
+            "CLOSE",
+            "REOPEN"
+          ],
+          "title": "Decision",
+          "type": "string"
+        },
+        "evidence_freshness": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EvidenceFreshness"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "evidence_refs": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "finding_id": {
+          "minLength": 1,
+          "title": "Finding Id",
+          "type": "string"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "objective_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Objective Id"
+        },
+        "rationale": {
+          "minLength": 1,
+          "title": "Rationale",
+          "type": "string"
+        },
+        "result": {
+          "$ref": "#/$defs/ResultStatus"
+        },
+        "review_decision_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Review Decision Id"
+        },
+        "review_state": {
+          "$ref": "#/$defs/ReviewState",
+          "default": "SUGGESTED"
+        },
+        "test_result_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Test Result Id"
+        },
+        "tested_at": {
+          "format": "date-time",
+          "title": "Tested At",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "finding_id",
+        "before_run_id",
+        "after_run_id",
+        "evidence_refs",
+        "result",
+        "decision",
+        "rationale",
+        "tested_at"
+      ],
+      "title": "Retest",
+      "type": "object"
+    },
+    "ReviewDecision": {
+      "additionalProperties": false,
+      "properties": {
+        "artifact_hash": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Artifact Hash",
+          "type": "string"
+        },
+        "decision": {
+          "minLength": 1,
+          "title": "Decision",
+          "type": "string"
+        },
+        "expected_version": {
+          "minimum": 0,
+          "title": "Expected Version",
+          "type": "integer"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "prior_state": {
+          "minLength": 1,
+          "title": "Prior State",
+          "type": "string"
+        },
+        "rationale": {
+          "minLength": 1,
+          "title": "Rationale",
+          "type": "string"
+        },
+        "reviewer": {
+          "minLength": 1,
+          "title": "Reviewer",
+          "type": "string"
+        },
+        "subject_id": {
+          "minLength": 1,
+          "title": "Subject Id",
+          "type": "string"
+        },
+        "subject_type": {
+          "enum": [
+            "RUN",
+            "CONTROL",
+            "FINDING",
+            "RISK",
+            "EXCEPTION",
+            "AI_SUGGESTION"
+          ],
+          "title": "Subject Type",
+          "type": "string"
+        },
+        "timestamp": {
+          "format": "date-time",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "version": {
+          "minimum": 1,
+          "title": "Version",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "reviewer",
+        "subject_type",
+        "subject_id",
+        "prior_state",
+        "decision",
+        "rationale",
+        "timestamp",
+        "artifact_hash",
+        "expected_version",
+        "version"
+      ],
+      "title": "ReviewDecision",
+      "type": "object"
+    },
+    "ReviewState": {
+      "enum": [
+        "SUGGESTED",
+        "ACCEPTED",
+        "REJECTED"
+      ],
+      "title": "ReviewState",
+      "type": "string"
+    },
+    "Risk": {
+      "additionalProperties": false,
+      "properties": {
+        "confidence": {
+          "enum": [
+            "LOW",
+            "MODERATE",
+            "HIGH"
+          ],
+          "title": "Confidence",
+          "type": "string"
+        },
+        "finding_id": {
+          "minLength": 1,
+          "title": "Finding Id",
+          "type": "string"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "impact": {
+          "maximum": 5,
+          "minimum": 1,
+          "title": "Impact",
+          "type": "integer"
+        },
+        "inherent_rating": {
+          "$ref": "#/$defs/Severity"
+        },
+        "inherent_score": {
+          "maximum": 25,
+          "minimum": 1,
+          "title": "Inherent Score",
+          "type": "integer"
+        },
+        "likelihood": {
+          "maximum": 5,
+          "minimum": 1,
+          "title": "Likelihood",
+          "type": "integer"
+        },
+        "owner": {
+          "minLength": 1,
+          "title": "Owner",
+          "type": "string"
+        },
+        "rationale": {
+          "minLength": 1,
+          "title": "Rationale",
+          "type": "string"
+        },
+        "residual_impact": {
+          "maximum": 5,
+          "minimum": 1,
+          "title": "Residual Impact",
+          "type": "integer"
+        },
+        "residual_likelihood": {
+          "maximum": 5,
+          "minimum": 1,
+          "title": "Residual Likelihood",
+          "type": "integer"
+        },
+        "residual_rating": {
+          "$ref": "#/$defs/Severity"
+        },
+        "residual_score": {
+          "maximum": 25,
+          "minimum": 1,
+          "title": "Residual Score",
+          "type": "integer"
+        },
+        "statement": {
+          "minLength": 1,
+          "title": "Statement",
+          "type": "string"
+        },
+        "treatment": {
+          "$ref": "#/$defs/RiskTreatment"
+        }
+      },
+      "required": [
+        "id",
+        "finding_id",
+        "statement",
+        "likelihood",
+        "impact",
+        "inherent_score",
+        "inherent_rating",
+        "residual_likelihood",
+        "residual_impact",
+        "residual_score",
+        "residual_rating",
+        "confidence",
+        "treatment",
+        "owner",
+        "rationale"
+      ],
+      "title": "Risk",
+      "type": "object"
+    },
+    "RiskTreatment": {
+      "enum": [
+        "MITIGATE",
+        "ACCEPT",
+        "TRANSFER",
+        "AVOID"
+      ],
+      "title": "RiskTreatment",
+      "type": "string"
+    },
+    "RunStatus": {
+      "enum": [
+        "QUEUED",
+        "COLLECTING",
+        "EVALUATING",
+        "REVIEW_REQUIRED",
+        "COMPLETED",
+        "FAILED"
+      ],
+      "title": "RunStatus",
+      "type": "string"
+    },
+    "Severity": {
+      "enum": [
+        "LOW",
+        "MODERATE",
+        "HIGH",
+        "CRITICAL"
+      ],
+      "title": "Severity",
+      "type": "string"
+    },
+    "SystemClassification": {
+      "additionalProperties": false,
+      "properties": {
+        "classification": {
+          "$ref": "#/$defs/Classification"
+        },
+        "description": {
+          "minLength": 1,
+          "title": "Description",
+          "type": "string"
+        },
+        "handling": {
+          "minLength": 1,
+          "title": "Handling",
+          "type": "string"
+        }
+      },
+      "required": [
+        "classification",
+        "description",
+        "handling"
+      ],
+      "title": "SystemClassification",
+      "type": "object"
+    },
+    "SystemDataFlow": {
+      "additionalProperties": false,
+      "properties": {
+        "classification": {
+          "$ref": "#/$defs/Classification"
+        },
+        "data": {
+          "minLength": 1,
+          "title": "Data",
+          "type": "string"
+        },
+        "destination": {
+          "minLength": 1,
+          "title": "Destination",
+          "type": "string"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "protection": {
+          "minLength": 1,
+          "title": "Protection",
+          "type": "string"
+        },
+        "retention": {
+          "minLength": 1,
+          "title": "Retention",
+          "type": "string"
+        },
+        "source": {
+          "minLength": 1,
+          "title": "Source",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "source",
+        "destination",
+        "data",
+        "classification",
+        "protection",
+        "retention"
+      ],
+      "title": "SystemDataFlow",
+      "type": "object"
+    },
+    "SystemIdentity": {
+      "additionalProperties": false,
+      "properties": {
+        "assigned_scope": {
+          "minLength": 1,
+          "title": "Assigned Scope",
+          "type": "string"
+        },
+        "authentication": {
+          "minLength": 1,
+          "title": "Authentication",
+          "type": "string"
+        },
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "privilege": {
+          "minLength": 1,
+          "title": "Privilege",
+          "type": "string"
+        },
+        "purpose": {
+          "minLength": 1,
+          "title": "Purpose",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "purpose",
+        "privilege",
+        "authentication",
+        "assigned_scope"
+      ],
+      "title": "SystemIdentity",
+      "type": "object"
+    },
+    "SystemInventoryItem": {
+      "additionalProperties": false,
+      "properties": {
+        "lifecycle": {
+          "minLength": 1,
+          "title": "Lifecycle",
+          "type": "string"
+        },
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "plane": {
+          "minLength": 1,
+          "title": "Plane",
+          "type": "string"
+        },
+        "region": {
+          "minLength": 1,
+          "title": "Region",
+          "type": "string"
+        },
+        "type": {
+          "minLength": 1,
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "type",
+        "plane",
+        "region",
+        "lifecycle"
+      ],
+      "title": "SystemInventoryItem",
+      "type": "object"
+    },
+    "SystemRecord": {
+      "additionalProperties": false,
+      "description": "Versioned, runtime system-boundary record included in every package.",
+      "properties": {
+        "boundary": {
+          "minLength": 1,
+          "title": "Boundary",
+          "type": "string"
+        },
+        "classifications": {
+          "items": {
+            "$ref": "#/$defs/SystemClassification"
+          },
+          "minItems": 1,
+          "title": "Classifications",
+          "type": "array"
+        },
+        "data_classification": {
+          "minLength": 1,
+          "title": "Data Classification",
+          "type": "string"
+        },
+        "data_flows": {
+          "items": {
+            "$ref": "#/$defs/SystemDataFlow"
+          },
+          "minItems": 1,
+          "title": "Data Flows",
+          "type": "array"
+        },
+        "exclusions": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Exclusions",
+          "type": "array"
+        },
+        "identities": {
+          "items": {
+            "$ref": "#/$defs/SystemIdentity"
+          },
+          "minItems": 1,
+          "title": "Identities",
+          "type": "array"
+        },
+        "inventory": {
+          "items": {
+            "$ref": "#/$defs/SystemInventoryItem"
+          },
+          "minItems": 1,
+          "title": "Inventory",
+          "type": "array"
+        },
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.0.0",
+          "default": "1.0.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "shared_responsibility": {
+          "minLength": 1,
+          "title": "Shared Responsibility",
+          "type": "string"
+        },
+        "system_id": {
+          "minLength": 1,
+          "title": "System Id",
+          "type": "string"
+        },
+        "trust_boundaries": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Trust Boundaries",
+          "type": "array"
+        }
+      },
+      "required": [
+        "system_id",
+        "name",
+        "boundary",
+        "data_classification",
+        "data_flows",
+        "trust_boundaries",
+        "inventory",
+        "identities",
+        "classifications",
+        "shared_responsibility",
+        "exclusions"
+      ],
+      "title": "SystemRecord",
+      "type": "object"
+    },
+    "TestResult": {
+      "additionalProperties": false,
+      "properties": {
+        "details": {
+          "additionalProperties": true,
+          "title": "Details",
+          "type": "object"
+        },
+        "evaluated_at": {
+          "format": "date-time",
+          "title": "Evaluated At",
+          "type": "string"
+        },
+        "evidence_refs": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "objective_id": {
+          "minLength": 1,
+          "title": "Objective Id",
+          "type": "string"
+        },
+        "reason": {
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        },
+        "reason_code": {
+          "minLength": 1,
+          "title": "Reason Code",
+          "type": "string"
+        },
+        "run_id": {
+          "minLength": 1,
+          "title": "Run Id",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/ResultStatus"
+        },
+        "test_version": {
+          "minLength": 1,
+          "title": "Test Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "run_id",
+        "objective_id",
+        "status",
+        "reason_code",
+        "reason",
+        "test_version"
+      ],
+      "title": "TestResult",
+      "type": "object"
+    }
+  },
+  "$id": "https://example.invalid/aica/schemas/assessment-package.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "assessments": {
+      "items": {
+        "$ref": "#/$defs/ControlAssessment"
+      },
+      "title": "Assessments",
+      "type": "array"
+    },
+    "decisions": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/ReviewDecision"
+      },
+      "title": "Decisions",
+      "type": "array"
+    },
+    "evidence": {
+      "items": {
+        "$ref": "#/$defs/EvidenceItem"
+      },
+      "title": "Evidence",
+      "type": "array"
+    },
+    "exceptions": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/ExceptionRecord"
+      },
+      "title": "Exceptions",
+      "type": "array"
+    },
+    "findings": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/Finding"
+      },
+      "title": "Findings",
+      "type": "array"
+    },
+    "objectives": {
+      "items": {
+        "$ref": "#/$defs/ControlObjective"
+      },
+      "title": "Objectives",
+      "type": "array"
+    },
+    "observations": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/Observation"
+      },
+      "title": "Observations",
+      "type": "array"
+    },
+    "remediations": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/Remediation"
+      },
+      "title": "Remediations",
+      "type": "array"
+    },
+    "retests": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/Retest"
+      },
+      "title": "Retests",
+      "type": "array"
+    },
+    "risks": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/Risk"
+      },
+      "title": "Risks",
+      "type": "array"
+    },
+    "run": {
+      "$ref": "#/$defs/AssessmentRun"
+    },
+    "system": {
+      "$ref": "#/$defs/SystemRecord"
+    },
+    "test_results": {
+      "items": {
+        "$ref": "#/$defs/TestResult"
+      },
+      "title": "Test Results",
+      "type": "array"
+    }
+  },
+  "required": [
+    "run",
+    "system",
+    "objectives",
+    "evidence",
+    "test_results",
+    "assessments"
+  ],
+  "title": "AssessmentPackage",
+  "type": "object"
+}

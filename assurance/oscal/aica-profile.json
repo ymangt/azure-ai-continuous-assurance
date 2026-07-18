@@ -1,0 +1,31 @@
+{
+  "profile": {
+    "uuid": "10000000-0000-4000-8000-000000000002",
+    "metadata": {
+      "title": "AICA 20+5 Assurance Profile",
+      "published": "2026-05-15T12:00:00Z",
+      "last-modified": "2026-05-15T12:00:00Z",
+      "version": "1.0.0",
+      "oscal-version": "1.2.2",
+      "props":[{"name":"marking","value":"PUBLIC-SANITIZED"}],
+      "remarks":"Selects 20 NIST SP 800-53 Rev. 5 controls and five project-specific AI controls for an internal readiness simulation."
+    },
+    "imports": [
+      {
+        "href":"https://raw.githubusercontent.com/usnistgov/oscal-content/v1.3.0/nist.gov/SP800-53/rev5/json/NIST_SP-800-53_rev5_catalog.json",
+        "include-controls":[{"with-ids":["ac-2","ac-3","ac-6","ia-2","ia-5","au-2","au-6","au-12","ca-7","cm-2","cm-3","cm-6","cp-9","ir-4","ra-3","ra-5","sa-11","sc-7","sc-8","si-4"]}]
+      },
+      {
+        "href":"./aica-ai-catalog.json",
+        "include-controls":[{"with-ids":["ai-gv-01","ai-dp-01","ai-ac-01","ai-te-01","ai-mo-01"]}]
+      }
+    ],
+    "merge":{"as-is":true},
+    "modify":{
+      "alters":[
+        {"control-id":"sc-7","adds":[{"position":"ending","props":[{"name":"profile-note","value":"Public endpoints are risk-accepted for the student-cost profile when authenticated, rate-limited, and monitored."}]}]},
+        {"control-id":"cp-9","adds":[{"position":"ending","props":[{"name":"profile-note","value":"Versioning, soft delete, lifecycle retention, and tested restore are required; locked WORM is excluded."}]}]}
+      ]
+    }
+  }
+}

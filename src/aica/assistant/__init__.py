@@ -1,0 +1,1 @@
+"""Minimal system under assurance."""

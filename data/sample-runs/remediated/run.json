@@ -1,0 +1,16 @@
+{
+  "$schema":"../../../schemas/assessment-run.schema.json",
+  "run_id":"018f6d9a-7b10-7c01-8000-000000000002",
+  "display_id":"RUN-002",
+  "trigger":"RETEST",
+  "profile_id":"AICA-STUDENT-1.0",
+  "prior_run_id":"018f6d9a-7b10-7c01-8000-000000000001",
+  "scope":{"mode":"PUBLIC_SANITIZED","selectors":["rg-aica-control-cc","rg-aica-sut-eus2","fixture:legacy-unattached-nsg","repository:aica"],"excluded":["unrelated tenant resources","Azure platform internals","raw evaluation content"]},
+  "observation_window":{"start":"2026-06-08T11:30:00Z","end":"2026-06-08T12:22:00Z"},
+  "git_commit":"0000000000000000000000000000000000000002",
+  "collector_version":"1.1.0","evaluator_version":"1.1.0","schema_version":"1.0.0",
+  "started_at":"2026-06-08T12:00:00Z","ended_at":"2026-06-08T12:24:00Z","status":"COMPLETED",
+  "manifest_digest":null,
+  "cost":{"currency":"CAD","model_estimate":0.04,"compute_estimate":0.02,"storage_estimate":0.01,"telemetry_estimate":0.01,"total_estimate":0.08},
+  "summary":{"controls":25,"objectives":35,"PASS":33,"FAIL":0,"ERROR":0,"NOT_RUN":0,"NOT_APPLICABLE":2,"open_findings":1,"closed_findings":4,"high_risks":0,"moderate_risks":1,"not_concluded_controls":0}
+}

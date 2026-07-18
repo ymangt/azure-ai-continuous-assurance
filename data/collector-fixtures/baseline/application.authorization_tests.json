@@ -1,0 +1,7 @@
+{
+  "source": "application.authorization_tests",
+  "query": "sanitized negative authentication and app-role integration probes",
+  "classification": "PUBLIC_SANITIZED",
+  "captured_at": "2026-06-01T12:03:00Z",
+  "payload": {"unauthenticated_status": 401, "wrong_role_status": 403}
+}

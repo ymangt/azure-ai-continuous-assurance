@@ -1,0 +1,24 @@
+{
+  "name": "azure-dev",
+  "description": "Student-cost Azure assurance profile for the control, SUT, fixture, and existing Sentinel scopes.",
+  "trigger": "manual",
+  "scope": [
+    "/subscriptions/${AZURE_SUBSCRIPTION_ID}/resourceGroups/rg-aica-control-cc",
+    "/subscriptions/${AZURE_SUBSCRIPTION_ID}/resourceGroups/rg-aica-sut-eus2",
+    "/subscriptions/${AZURE_SUBSCRIPTION_ID}/resourceGroups/rg-aica-fixture-eus2",
+    "/subscriptions/${AZURE_SUBSCRIPTION_ID}/resourceGroups/rg-sc200-sentinel-lab"
+  ],
+  "collectors": ["azure", "github", "ai"],
+  "objective_path": "assurance/controls/control-profile.json",
+  "system_record_path": "config/system-record.json",
+  "observation_window_hours": 24,
+  "estimated_cost_cad": 0.25,
+  "cost_breakdown": {
+    "currency": "CAD",
+    "model_estimate_cad": 0.10,
+    "compute_estimate_cad": 0.07,
+    "storage_estimate_cad": 0.03,
+    "telemetry_estimate_cad": 0.05,
+    "total_estimate_cad": 0.25
+  }
+}

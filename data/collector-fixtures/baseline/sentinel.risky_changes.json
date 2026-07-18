@@ -1,0 +1,4 @@
+{
+  "source":"sentinel.risky_changes","query":"AzureActivity | where OperationNameValue has_any ('networkSecurityGroups/securityRules/write','roleAssignments/write') | summarize count() by sanitized fields","classification":"PUBLIC_SANITIZED","captured_at":"2026-06-01T12:17:30Z",
+  "payload":{"tables":[{"name":"PrimaryResult","columns":["RunId_g","ChangeType_s","Target_s","Count_d"],"rows":[{"RunId_g":"018f6d9a-7b10-7c01-8000-000000000001","ChangeType_s":"LEGACY_NSG_RULE_PRESENT","Target_s":"fixture-nsg-sanitized","Count_d":1}]}],"RunId_g":"018f6d9a-7b10-7c01-8000-000000000001"}
+}

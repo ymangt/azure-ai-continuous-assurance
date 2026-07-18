@@ -1,0 +1,122 @@
+name: Build protected Phi fallback
+
+on:
+  workflow_dispatch:
+    inputs:
+      quota_evidence_sha256:
+        description: SHA-256 of private MCP evidence showing deployable Foundry quota is zero
+        required: true
+        type: string
+      approval_token:
+        description: Enter APPROVE_PHI_FALLBACK_BUILD
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+  attestations: write
+
+concurrency:
+  group: phi-fallback-build
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    environment: phi-fallback
+    timeout-minutes: 90
+    steps:
+      - name: Validate explicit quota-failure approval
+        env:
+          APPROVAL: ${{ inputs.approval_token }}
+          QUOTA_EVIDENCE_SHA256: ${{ inputs.quota_evidence_sha256 }}
+        shell: bash
+        run: |
+          test "$APPROVAL" = APPROVE_PHI_FALLBACK_BUILD
+          [[ "$QUOTA_EVIDENCE_SHA256" =~ ^[0-9a-fA-F]{64}$ ]]
+      - name: Check out repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+      - name: Normalize immutable image name
+        id: image
+        shell: bash
+        run: echo "name=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/aica-models-phi-server" >> "$GITHUB_OUTPUT"
+      - name: Log in to GHCR
+        uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2
+      - name: Build and push pinned Phi model image
+        id: build
+        uses: docker/build-push-action@14487ce63c7a62a4a324b0bfb37086795e31c6c1
+        with:
+          context: models/phi-server
+          file: models/phi-server/Dockerfile
+          push: true
+          provenance: false
+          sbom: false
+          tags: ${{ steps.image.outputs.name }}:${{ github.sha }}
+      - name: Scan pushed fallback image
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
+        with:
+          image-ref: ${{ steps.image.outputs.name }}@${{ steps.build.outputs.digest }}
+          format: table
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: '1'
+      - name: Generate SPDX SBOM
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610
+        with:
+          image: ${{ steps.image.outputs.name }}@${{ steps.build.outputs.digest }}
+          format: spdx-json
+          output-file: phi-fallback.spdx.json
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6
+      - name: Sign and verify by workflow identity
+        env:
+          IMAGE: ${{ steps.image.outputs.name }}@${{ steps.build.outputs.digest }}
+        shell: bash
+        run: |
+          cosign sign --yes "$IMAGE"
+          cosign verify \
+            --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+            --certificate-identity-regexp "^https://github.com/${GITHUB_REPOSITORY}/.github/workflows/phi-fallback.yml@refs/(heads|tags)/" \
+            "$IMAGE"
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373
+        with:
+          subject-name: ${{ steps.image.outputs.name }}
+          subject-digest: ${{ steps.build.outputs.digest }}
+          push-to-registry: true
+      - name: Record immutable fallback handoff
+        env:
+          IMAGE_NAME: ${{ steps.image.outputs.name }}
+          IMAGE_DIGEST: ${{ steps.build.outputs.digest }}
+          QUOTA_EVIDENCE_SHA256: ${{ inputs.quota_evidence_sha256 }}
+        shell: bash
+        run: |
+          mkdir -p /tmp/phi-fallback
+          cp phi-fallback.spdx.json /tmp/phi-fallback/
+          jq --null-input \
+            --arg image "$IMAGE_NAME" \
+            --arg digest "$IMAGE_DIGEST" \
+            --arg commit "$GITHUB_SHA" \
+            --arg quotaEvidenceSha256 "$QUOTA_EVIDENCE_SHA256" \
+            '{image: ($image + "@" + $digest), digest: $digest, sourceCommit: $commit, quotaEvidenceSha256: $quotaEvidenceSha256, modelRevision: "9b9010e414c555d094141b5bb8da092ebe8f79fa", signed: true, provenanceAttested: true}' \
+            > /tmp/phi-fallback/image.json
+          (cd /tmp/phi-fallback && sha256sum image.json phi-fallback.spdx.json > SHA256SUMS)
+          printf '%s\n' \
+            'No Azure resource was created or changed.' \
+            'Use this digest only with student.phi-after-quota-failure.bicepparam and the matching private quota evidence.' \
+            'Azure MCP must perform What-If/deployment and record cold-start, latency, memory, provenance, and cost evidence.' > /tmp/phi-fallback/README.txt
+      - name: Upload protected fallback handoff
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: phi-fallback-${{ github.sha }}
+          path: /tmp/phi-fallback
+          if-no-files-found: error
+          retention-days: 14

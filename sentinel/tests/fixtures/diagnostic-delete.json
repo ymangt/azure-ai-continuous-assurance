@@ -1,0 +1,10 @@
+[
+  {
+    "TimeGenerated": "2026-07-16T12:00:00Z",
+    "ActivityStatusValue": "Success",
+    "OperationNameValue": "MICROSOFT.INSIGHTS/DIAGNOSTICSETTINGS/DELETE",
+    "Caller": "fixture-reviewer@example.invalid",
+    "CorrelationId": "00000000-0000-0000-0000-000000000002",
+    "ResourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-aica-fixture-eus2/providers/Microsoft.Storage/storageAccounts/fixture"
+  }
+]

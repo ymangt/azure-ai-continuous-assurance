@@ -1,0 +1,37 @@
+{
+  "title":"AICA Informative Crosswalk","version":"1.0.0","published":"2026-06-08T13:00:00Z",
+  "disclaimer":"Informative thematic relationships only. A mapping does not establish equivalence, inherit compliance, or replace framework-specific analysis.",
+  "frameworks":[
+    {"id":"NIST-CSF-2.0","uri":"https://www.nist.gov/cyberframework"},
+    {"id":"MCSB","uri":"https://learn.microsoft.com/security/benchmark/azure/overview"},
+    {"id":"NIST-AI-RMF-GENAI","uri":"https://doi.org/10.6028/NIST.AI.600-1"},
+    {"id":"OWASP-AGENTIC-TOP-10","uri":"https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/"}
+  ],
+  "mappings":[
+    {"control_id":"AC-2","csf":["PR.AA"],"mcsb":["Identity Management"],"ai_rmf":["GOVERN"],"owasp_agentic":[],"rationale":"Identity lifecycle and accountability."},
+    {"control_id":"AC-3","csf":["PR.AA"],"mcsb":["Identity Management"],"ai_rmf":["MANAGE"],"owasp_agentic":["ASI03 Identity and Privilege Abuse"],"rationale":"Enforcement of authorized access."},
+    {"control_id":"AC-6","csf":["PR.AA"],"mcsb":["Privileged Access"],"ai_rmf":["GOVERN"],"owasp_agentic":["ASI03 Identity and Privilege Abuse"],"rationale":"Least privilege for users, workloads, and tools."},
+    {"control_id":"IA-2","csf":["PR.AA"],"mcsb":["Identity Management"],"ai_rmf":[],"owasp_agentic":["ASI03 Identity and Privilege Abuse"],"rationale":"Authentication of organizational users."},
+    {"control_id":"IA-5","csf":["PR.AA"],"mcsb":["Identity Management","Privileged Access"],"ai_rmf":[],"owasp_agentic":["ASI03 Identity and Privilege Abuse"],"rationale":"Authenticator and workload-credential management."},
+    {"control_id":"AU-2","csf":["DE.CM"],"mcsb":["Logging and Threat Detection"],"ai_rmf":["MEASURE"],"owasp_agentic":[],"rationale":"Selection of events needed for detection and assurance."},
+    {"control_id":"AU-6","csf":["DE.AE","DE.CM"],"mcsb":["Logging and Threat Detection"],"ai_rmf":["MEASURE","MANAGE"],"owasp_agentic":[],"rationale":"Review, analysis, and escalation of records."},
+    {"control_id":"AU-12","csf":["DE.CM"],"mcsb":["Logging and Threat Detection"],"ai_rmf":["MEASURE"],"owasp_agentic":[],"rationale":"Complete, privacy-aware event generation."},
+    {"control_id":"CA-7","csf":["GV.OV","ID.IM"],"mcsb":["Posture and Vulnerability Management"],"ai_rmf":["MEASURE","MANAGE"],"owasp_agentic":["ASI08 Cascading Failures"],"rationale":"Ongoing monitoring and improvement."},
+    {"control_id":"CM-2","csf":["PR.PS"],"mcsb":["Asset Management","Posture and Vulnerability Management"],"ai_rmf":["GOVERN"],"owasp_agentic":["ASI04 Agentic Supply Chain Vulnerabilities"],"rationale":"Approved configuration baselines."},
+    {"control_id":"CM-3","csf":["PR.PS","ID.IM"],"mcsb":["Posture and Vulnerability Management"],"ai_rmf":["GOVERN","MANAGE"],"owasp_agentic":["ASI04 Agentic Supply Chain Vulnerabilities"],"rationale":"Authorized, tested, traceable changes."},
+    {"control_id":"CM-6","csf":["PR.PS"],"mcsb":["Posture and Vulnerability Management"],"ai_rmf":["MANAGE"],"owasp_agentic":[],"rationale":"Secure configuration settings."},
+    {"control_id":"CP-9","csf":["PR.DS","RC.RP"],"mcsb":["Backup and Recovery"],"ai_rmf":["MANAGE"],"owasp_agentic":["ASI08 Cascading Failures"],"rationale":"Evidence preservation and recovery."},
+    {"control_id":"IR-4","csf":["RS.MA","RS.AN","RC.RP"],"mcsb":["Incident Response"],"ai_rmf":["MANAGE"],"owasp_agentic":["ASI08 Cascading Failures","ASI10 Rogue Agents"],"rationale":"Coordinated handling of cloud and AI events."},
+    {"control_id":"RA-3","csf":["ID.RA","GV.RM"],"mcsb":["Governance and Strategy"],"ai_rmf":["MAP","MANAGE"],"owasp_agentic":[],"rationale":"Risk identification, scoring, treatment, and review."},
+    {"control_id":"RA-5","csf":["ID.RA","DE.CM"],"mcsb":["Posture and Vulnerability Management"],"ai_rmf":["MEASURE"],"owasp_agentic":["ASI04 Agentic Supply Chain Vulnerabilities"],"rationale":"Vulnerability monitoring and release thresholds."},
+    {"control_id":"SA-11","csf":["PR.PS","ID.IM"],"mcsb":["DevOps Security"],"ai_rmf":["MEASURE"],"owasp_agentic":["ASI04 Agentic Supply Chain Vulnerabilities","ASI05 Unexpected Code Execution"],"rationale":"Developer testing and evaluation."},
+    {"control_id":"SC-7","csf":["PR.IR"],"mcsb":["Network Security"],"ai_rmf":["MANAGE"],"owasp_agentic":["ASI02 Tool Misuse and Exploitation"],"rationale":"Service and network boundary protection."},
+    {"control_id":"SC-8","csf":["PR.DS"],"mcsb":["Data Protection"],"ai_rmf":[],"owasp_agentic":["ASI07 Insecure Inter-Agent Communication"],"rationale":"Confidentiality and integrity in transit."},
+    {"control_id":"SI-4","csf":["DE.CM","DE.AE"],"mcsb":["Logging and Threat Detection"],"ai_rmf":["MEASURE","MANAGE"],"owasp_agentic":["ASI08 Cascading Failures"],"rationale":"Monitoring, detection, and analysis."},
+    {"control_id":"AI-GV-01","csf":["GV.OC","GV.RM","GV.RR","GV.PO","GV.OV"],"mcsb":["Governance and Strategy"],"ai_rmf":["GOVERN","MAP"],"owasp_agentic":["ASI09 Human-Agent Trust Exploitation","ASI10 Rogue Agents"],"rationale":"Use boundaries, accountability, risk tolerance, and human authority."},
+    {"control_id":"AI-DP-01","csf":["ID.AM","ID.RA","PR.DS"],"mcsb":["Data Protection","Asset Management"],"ai_rmf":["MAP","MEASURE","MANAGE"],"owasp_agentic":["ASI01 Agent Goal Hijack","ASI06 Memory and Context Poisoning"],"rationale":"Grounding provenance, trust boundaries, integrity, and poisoning resistance."},
+    {"control_id":"AI-AC-01","csf":["PR.AA","PR.PS"],"mcsb":["Identity Management","Privileged Access"],"ai_rmf":["GOVERN","MANAGE"],"owasp_agentic":["ASI02 Tool Misuse and Exploitation","ASI03 Identity and Privilege Abuse","ASI09 Human-Agent Trust Exploitation"],"rationale":"Independent authorization and explicit confirmation for tools."},
+    {"control_id":"AI-TE-01","csf":["ID.RA","ID.IM","PR.PS"],"mcsb":["DevOps Security","Posture and Vulnerability Management"],"ai_rmf":["MEASURE","MANAGE"],"owasp_agentic":["ASI01 Agent Goal Hijack","ASI04 Agentic Supply Chain Vulnerabilities","ASI08 Cascading Failures"],"rationale":"Fixed evaluation and exact-configuration release gate."},
+    {"control_id":"AI-MO-01","csf":["DE.CM","DE.AE","RS.MA"],"mcsb":["Logging and Threat Detection","Incident Response"],"ai_rmf":["MEASURE","MANAGE"],"owasp_agentic":["ASI01 Agent Goal Hijack","ASI02 Tool Misuse and Exploitation","ASI08 Cascading Failures","ASI10 Rogue Agents"],"rationale":"AI telemetry, abuse detection, change detection, and escalation."}
+  ]
+}

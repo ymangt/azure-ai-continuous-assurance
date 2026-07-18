@@ -1,0 +1,12 @@
+{
+  "source":"azure.resource_graph.inventory",
+  "query":"Resources | where resourceGroup in~ ('rg-aica-control-cc','rg-aica-sut-eus2','rg-aica-fixture-eus2') | project sanitized configuration fields",
+  "classification":"PUBLIC_SANITIZED",
+  "captured_at":"2026-06-01T12:04:00Z",
+  "payload":{"nodes":[
+    {"id":"resource:assistant","type":"Microsoft.App/containerApps","location":"eastus2","identity":{"type":"SystemAssigned","principalId":"principal-sanitized-assistant"},"properties":{"configuration":{"ingress":{"external":true,"targetPort":8000,"transport":"auto","unauthenticatedClientAction":false}},"template":{"containers":[{"name":"assistant","image":"ghcr.io/example/aica-assistant@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}]}}},
+    {"id":"resource:assurance-api","type":"Microsoft.App/containerApps","location":"canadacentral","identity":{"type":"SystemAssigned","principalId":"principal-sanitized-console"},"properties":{"configuration":{"ingress":{"external":true,"targetPort":8000,"transport":"auto","unauthenticatedClientAction":false}},"template":{"containers":[{"name":"api","image":"ghcr.io/example/aica-api@sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"}]}}},
+    {"id":"resource:evidence-storage","type":"Microsoft.Storage/storageAccounts","location":"canadacentral","identity":{"type":"SystemAssigned"},"properties":{"allowBlobPublicAccess":false,"supportsHttpsTrafficOnly":true,"minimumTlsVersion":"TLS1_2","isVersioningEnabled":true,"deleteRetentionPolicy":{"enabled":true,"days":30}}},
+    {"id":"resource:legacy-nsg","type":"Microsoft.Network/networkSecurityGroups","location":"eastus2","identity":{"type":"None"},"attachedTo":[],"securityRules":[{"name":"Allow-RDP-Internet","direction":"Inbound","access":"Allow","protocol":"Tcp","destinationPortRange":"3389","sourceAddressPrefix":"*","priority":100}]}
+  ]}
+}

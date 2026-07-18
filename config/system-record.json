@@ -1,0 +1,228 @@
+{
+  "schema_version": "1.0.0",
+  "system_id": "aica-student-assurance",
+  "name": "Azure AI Continuous Assurance",
+  "boundary": "The authorization boundary contains the Canada Central assurance plane and the East US 2 synthetic policy-assistant plane. The existing security workspace and GitHub-hosted source, CI, and registry services are external dependencies observed through scoped interfaces; the public console receives sanitized, signed derivatives only.",
+  "data_classification": "The system is limited to synthetic policy content. Raw operational evidence and controlled evaluation content remain private; only sanitized assessment records, hashes, and non-sensitive boundary metadata may cross into the public console.",
+  "data_flows": [
+    {
+      "id": "F-01",
+      "source": "Version-controlled repository",
+      "destination": "Corpus Blob and local FTS5 index",
+      "data": "Synthetic policy documents and integrity manifest",
+      "classification": "INTERNAL",
+      "protection": "TLS, workload identity, and manifest digest verification",
+      "retention": "For the active project lifecycle"
+    },
+    {
+      "id": "F-02",
+      "source": "Authenticated user",
+      "destination": "Policy assistant",
+      "data": "Synthetic policy question and pseudonymous session metadata",
+      "classification": "RESTRICTED_TEST_EVIDENCE",
+      "protection": "Entra authentication, TLS, authorization, and rate limits",
+      "retention": "Raw content excluded from routine logs"
+    },
+    {
+      "id": "F-03",
+      "source": "Policy assistant",
+      "destination": "Selected model adapter",
+      "data": "Grounded synthetic context and question",
+      "classification": "RESTRICTED_TEST_EVIDENCE",
+      "protection": "Managed identity or isolated Azure-hosted runtime with request limits",
+      "retention": "Request content retained only for controlled evaluations"
+    },
+    {
+      "id": "F-04",
+      "source": "Azure, GitHub, and security-plane APIs",
+      "destination": "Assurance collector",
+      "data": "Configuration, role, diagnostic, query, and CI evidence",
+      "classification": "CONFIDENTIAL",
+      "protection": "Read-only scoped identities, single-repository GitHub App token, and TLS",
+      "retention": "Private evidence target of 365 days"
+    },
+    {
+      "id": "F-05",
+      "source": "Assurance collector and evaluator",
+      "destination": "Private evidence store",
+      "data": "Raw and normalized evidence, results, findings, risks, and lifecycle records",
+      "classification": "CONFIDENTIAL",
+      "protection": "Managed identity, encryption, versioning, soft delete, and independent hashes",
+      "retention": "Private evidence target of 365 days"
+    },
+    {
+      "id": "F-06",
+      "source": "Simulated reviewer",
+      "destination": "Append-only decision store",
+      "data": "Reviewer identity, prior state, decision, rationale, version, and artifact hash",
+      "classification": "CONFIDENTIAL",
+      "protection": "Entra authentication, role authorization, and optimistic concurrency",
+      "retention": "Private evidence target of 365 days"
+    },
+    {
+      "id": "F-07",
+      "source": "Assessment publisher",
+      "destination": "Public assurance console",
+      "data": "Sanitized assessment package, reports, evidence metadata, and system record",
+      "classification": "PUBLIC",
+      "protection": "Deterministic sanitization, public-boundary leak tests, artifact hashes, and signed manifest",
+      "retention": "Repository release retention"
+    }
+  ],
+  "trust_boundaries": [
+    "The public console is untrusted and read-only; it receives no Azure credential or private resource identifier.",
+    "Private reviewer commands cross Entra authentication and server-side role authorization before an append-only decision is queued.",
+    "The collector crosses assessed Azure, GitHub, and security-plane boundaries with distinct read-only credentials and writes only to private assurance storage.",
+    "Retrieved corpus text crosses an AI data boundary and is always treated as untrusted input.",
+    "Model-requested tools cross an independent authorization boundary; model output never grants authority.",
+    "Private evidence crosses a deterministic sanitization boundary before public release, and private and public forms receive independent hashes.",
+    "The assessment job crosses a signing boundary to a non-exportable P-256 key and records the exact public-key fingerprint in each manifest."
+  ],
+  "inventory": [
+    {
+      "name": "GitHub source, Actions, and GHCR",
+      "type": "External source control, CI, and image registry",
+      "plane": "External delivery plane",
+      "region": "Provider-managed global service",
+      "lifecycle": "External dependency scoped to one repository"
+    },
+    {
+      "name": "Public assurance console",
+      "type": "Static web application",
+      "plane": "Public presentation",
+      "region": "Azure global edge",
+      "lifecycle": "Persistent free-tier deployment"
+    },
+    {
+      "name": "Assurance API",
+      "type": "Container application",
+      "plane": "Assurance control",
+      "region": "Canada Central",
+      "lifecycle": "Consumption scale-to-zero"
+    },
+    {
+      "name": "Collector and evaluator",
+      "type": "Container Apps job",
+      "plane": "Assurance control",
+      "region": "Canada Central",
+      "lifecycle": "Scheduled and change-triggered"
+    },
+    {
+      "name": "Evidence and decision stores",
+      "type": "Blob Storage and Table Storage",
+      "plane": "Assurance control",
+      "region": "Canada Central",
+      "lifecycle": "Versioned with lifecycle deletion"
+    },
+    {
+      "name": "Manifest signing key",
+      "type": "Key Vault P-256 key",
+      "plane": "Assurance control",
+      "region": "Canada Central",
+      "lifecycle": "Versioned and non-exportable"
+    },
+    {
+      "name": "Policy assistant",
+      "type": "Container application",
+      "plane": "System under assurance",
+      "region": "East US 2",
+      "lifecycle": "Consumption scale-to-zero"
+    },
+    {
+      "name": "Synthetic policy corpus",
+      "type": "Blob Storage and SQLite FTS5",
+      "plane": "System under assurance",
+      "region": "East US 2",
+      "lifecycle": "Manifest-pinned project data"
+    },
+    {
+      "name": "Model adapter",
+      "type": "Foundry deployment or Azure-hosted fallback",
+      "plane": "System under assurance",
+      "region": "East US 2",
+      "lifecycle": "Quota-gated; fallback stopped outside demonstrations"
+    },
+    {
+      "name": "Existing security workspace",
+      "type": "Log Analytics and Microsoft Sentinel",
+      "plane": "External security plane",
+      "region": "Existing approved region",
+      "lifecycle": "Pre-existing and not owned by this project"
+    }
+  ],
+  "identities": [
+    {
+      "name": "Bootstrap deployment identity",
+      "purpose": "Create workload identities, federation, and approved role assignments.",
+      "privilege": "Project bootstrap scope only; separated from runtime collection.",
+      "authentication": "GitHub OIDC federation",
+      "assigned_scope": "Approved project resource groups"
+    },
+    {
+      "name": "GitHub deployment identity",
+      "purpose": "Deploy immutable workload revisions and version-controlled resources.",
+      "privilege": "Contributor without role-assignment write authority.",
+      "authentication": "GitHub OIDC federation",
+      "assigned_scope": "Approved project resource groups"
+    },
+    {
+      "name": "Policy assistant identity",
+      "purpose": "Read the synthetic corpus and invoke the selected model endpoint.",
+      "privilege": "Corpus read and model invocation only.",
+      "authentication": "User-assigned managed identity",
+      "assigned_scope": "Synthetic corpus and selected model deployment"
+    },
+    {
+      "name": "Assurance collector identity",
+      "purpose": "Collect read-only configuration and operational evidence and publish private packages.",
+      "privilege": "Read assessed scopes, ingest assurance telemetry, sign digests, and write evidence; no remediation permission.",
+      "authentication": "User-assigned managed identity and short-lived GitHub App installation token",
+      "assigned_scope": "Declared assessed scopes and private assurance stores"
+    },
+    {
+      "name": "Assurance API identity",
+      "purpose": "Read derived assessment records and append command and review events.",
+      "privilege": "Derived evidence read and command-table append only.",
+      "authentication": "User-assigned managed identity",
+      "assigned_scope": "Assurance public evidence and command store"
+    },
+    {
+      "name": "Sentinel content identity",
+      "purpose": "Deploy version-controlled analytics and workbook content.",
+      "privilege": "Security-content management without workload deployment or role grants.",
+      "authentication": "GitHub OIDC federation",
+      "assigned_scope": "Existing security content resource group"
+    }
+  ],
+  "classifications": [
+    {
+      "classification": "PUBLIC",
+      "description": "Sanitized assessment snapshots, public reports, hashes, and non-sensitive system-boundary metadata.",
+      "handling": "Publish only after deterministic sanitization, leak scanning, hash verification, and manifest signing."
+    },
+    {
+      "classification": "INTERNAL",
+      "description": "Synthetic policy corpus, configuration metadata, and ordinary human-readable workpapers.",
+      "handling": "Limit to project participants and approved workload identities; do not substitute it for public sanitization."
+    },
+    {
+      "classification": "CONFIDENTIAL",
+      "description": "Raw operational evidence, reviewer events, private resource metadata, and security configuration.",
+      "handling": "Keep in private assurance storage with scoped RBAC, encryption, versioning, and retention controls."
+    },
+    {
+      "classification": "RESTRICTED_TEST_EVIDENCE",
+      "description": "Adversarial prompts, model responses, tool-authorization traces, and controlled evaluation content.",
+      "handling": "Use only in approved synthetic evaluations; exclude raw content from routine logs and all public artifacts."
+    }
+  ],
+  "shared_responsibility": "Microsoft operates Azure physical infrastructure and managed-service control planes; GitHub operates its source-control, Actions, and registry services. The AICA project owns service selection and configuration, workload code, identity and access design, data classification and minimization, evidence collection, deterministic evaluation, simulated human review, incident handling, and honest reporting of limitations. Provider internals are not assessed.",
+  "exclusions": [
+    "Azure and GitHub provider internals, physical security, and controls unavailable through the scoped service interfaces.",
+    "Unrelated tenant resources and any workload outside the declared assessment scope.",
+    "Production, personal, customer, regulated, or otherwise non-synthetic data.",
+    "Independent audit, certification, regulatory attestation, or organizational separation-of-duties claims.",
+    "Enterprise private-networking controls, paid Defender plans, API Management, AKS, Cosmos DB, and other services excluded by the CAD 25 monthly student-cost profile.",
+    "Automatic remediation, risk acceptance, exception approval, or finding closure without a new evidence-backed retest and simulated reviewer decision."
+  ]
+}

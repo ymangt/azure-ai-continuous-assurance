@@ -1,0 +1,47 @@
+{
+  "$id": "https://example.invalid/aica/schemas/corpus-materialization-receipt.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Protected evidence that Azure MCP materialized and enumerated an exact corpus prefix.",
+  "properties": {
+    "azureMcpTool": { "const": "mcp__azure__storage" },
+    "blobs": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "blobName": { "minLength": 1, "type": "string" },
+          "contentHash": { "minLength": 1, "type": "string" },
+          "etag": { "minLength": 1, "type": "string" },
+          "lastModified": { "minLength": 1, "type": "string" },
+          "propertiesVerified": { "const": true },
+          "sha256": { "pattern": "^[0-9a-f]{64}$", "type": "string" },
+          "sizeBytes": { "minimum": 1, "type": "integer" },
+          "sourcePath": { "minLength": 1, "type": "string" },
+          "uploadStatus": { "const": "SUCCEEDED" }
+        },
+        "required": ["blobName", "contentHash", "etag", "lastModified", "propertiesVerified", "sha256", "sizeBytes", "sourcePath", "uploadStatus"],
+        "type": "object"
+      },
+      "minItems": 16,
+      "type": "array"
+    },
+    "bundleSha256": { "pattern": "^[0-9a-f]{64}$", "type": "string" },
+    "container": { "const": "synthetic-corpus" },
+    "containerUrl": { "format": "uri", "pattern": "^https://[a-z0-9]+\\.blob\\.core\\.windows\\.net/synthetic-corpus/?$", "type": "string" },
+    "environment": { "enum": ["dev", "demo"] },
+    "exactBlobSetVerified": { "const": true },
+    "listedBlobNames": { "items": { "minLength": 1, "type": "string" }, "minItems": 16, "type": "array", "uniqueItems": true },
+    "materializedAt": { "format": "date-time", "type": "string" },
+    "mcpEvidenceSha256": { "pattern": "^[0-9a-f]{64}$", "type": "string" },
+    "mutationChannel": { "const": "Azure MCP" },
+    "prefix": { "pattern": "^[A-Za-z0-9._-]+/[A-Za-z0-9._-]+$", "type": "string" },
+    "schemaVersion": { "const": "1.0.0" },
+    "sourceManifestSha256": { "pattern": "^[0-9a-f]{64}$", "type": "string" },
+    "status": { "const": "VERIFIED" },
+    "subscriptionId": { "format": "uuid", "type": "string" },
+    "uploadCommand": { "const": "storage_blob_upload" },
+    "verificationCommand": { "const": "storage_blob_get" }
+  },
+  "required": ["azureMcpTool", "blobs", "bundleSha256", "container", "containerUrl", "environment", "exactBlobSetVerified", "listedBlobNames", "materializedAt", "mcpEvidenceSha256", "mutationChannel", "prefix", "schemaVersion", "sourceManifestSha256", "status", "subscriptionId", "uploadCommand", "verificationCommand"],
+  "type": "object"
+}

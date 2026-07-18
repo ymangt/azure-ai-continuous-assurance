@@ -1,0 +1,12 @@
+[
+  {
+    "TimeGenerated": "2026-07-16T12:00:00Z",
+    "ActivityStatusValue": "Success",
+    "OperationNameValue": "MICROSOFT.AUTHORIZATION/ROLEASSIGNMENTS/WRITE",
+    "Caller": "fixture-reviewer@example.invalid",
+    "CallerIpAddress": "192.0.2.10",
+    "CorrelationId": "00000000-0000-0000-0000-000000000001",
+    "ResourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-aica-fixture-eus2/providers/Microsoft.Authorization/roleAssignments/fixture",
+    "Properties_d": "{\"requestbody\":\"{\\\"roleDefinitionName\\\":\\\"Owner\\\"}\"}"
+  }
+]

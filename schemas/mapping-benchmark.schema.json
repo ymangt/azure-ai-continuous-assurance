@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/aica/schemas/mapping-benchmark.schema.json",
+  "title": "Human-Labeled Evidence Mapping Benchmark",
+  "type": "object",
+  "required": ["dataset_id", "version", "labeling_policy", "examples", "release_targets"],
+  "properties": {
+    "dataset_id": {"type": "string"},
+    "version": {"type": "string"},
+    "labeling_policy": {"type": "string"},
+    "examples": {
+      "type": "array",
+      "minItems": 60,
+      "items": {
+        "type": "object",
+        "required": ["id", "evidence_excerpt", "candidate_objective_id", "label", "rationale", "required_citations"],
+        "properties": {
+          "id": {"type": "string"},
+          "evidence_excerpt": {"type": "string"},
+          "candidate_objective_id": {"type": "string"},
+          "label": {"enum": ["SUPPORTS", "CONTRADICTS", "INSUFFICIENT", "ABSTAIN"]},
+          "rationale": {"type": "string"},
+          "required_citations": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    },
+    "release_targets": {
+      "type": "object",
+      "required": ["precision", "mechanically_valid_evidence_references"],
+      "properties": {
+        "precision": {"type": "number", "minimum": 0, "maximum": 1},
+        "mechanically_valid_evidence_references": {"type": "number", "minimum": 0, "maximum": 1}
+      }
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "schema_version": "1.0.0",
+  "template_id": "AI-MAP-DP-01",
+  "text": "Candidate mapping: citation-valid indirect-prompt-injection results support objective AI-DP-01.1; a reviewer must verify the evidence references and conclusion.",
+  "suggested_control_ids": [
+    "AI-DP-01.1"
+  ],
+  "case_ids": [
+    "BEH-009",
+    "BEH-010",
+    "BEH-011",
+    "BEH-012",
+    "BEH-013",
+    "BEH-014",
+    "BEH-015",
+    "BEH-016"
+  ],
+  "provenance": {
+    "name": "frozen-keyword-mapper",
+    "version": "1.0.0"
+  }
+}

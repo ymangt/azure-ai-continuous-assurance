@@ -1,0 +1,3 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema","$id":"https://example.invalid/aica/schemas/assessment-run.schema.json","title":"Assessment Run","allOf":[{"$ref":"core-contracts.schema.json#/$defs/assessmentRun"}]
+}

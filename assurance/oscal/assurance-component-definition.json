@@ -1,0 +1,34 @@
+{
+  "component-definition": {
+    "uuid":"10000000-0000-4000-8000-000000000004",
+    "metadata":{"title":"Assurance Pipeline Component Definition","published":"2026-05-15T12:00:00Z","last-modified":"2026-05-15T12:00:00Z","version":"1.0.0","oscal-version":"1.2.2","props":[{"name":"marking","value":"PUBLIC-SANITIZED"}]},
+    "components":[{
+      "uuid":"20000000-0000-4000-8000-000000000002",
+      "type":"software",
+      "title":"Collector, Evaluator, and Reporting Pipeline",
+      "description":"Headless pipeline that collects, normalizes, evaluates, assesses, signs, and publishes sanitized assurance artifacts.",
+      "purpose":"Maintain immutable control evidence and assessment lifecycle records independent of the browser interface.",
+      "props":[{"name":"implementation-point","value":"internal"},{"name":"asset-type","value":"assurance-service"}],
+      "control-implementations":[{
+        "uuid":"21000000-0000-4000-8000-000000000002",
+        "source":"./aica-profile.json",
+        "description":"Capabilities implemented by the assurance plane.",
+        "implemented-requirements":[
+          {"uuid":"23000000-0000-4000-8000-000000000001","control-id":"ac-2","description":"Identity and access evidence is collected and ownership reviews are retained as signed workpapers."},
+          {"uuid":"23000000-0000-4000-8000-000000000002","control-id":"ac-6","description":"The collector has read-only assessed-scope access and write access only to its private evidence destination."},
+          {"uuid":"23000000-0000-4000-8000-000000000003","control-id":"au-2","description":"A versioned event taxonomy defines security, assurance, command, and AI tool events."},
+          {"uuid":"23000000-0000-4000-8000-000000000004","control-id":"au-6","description":"Weekly review workpapers record anomalous events, failed collections, and rejected escalations."},
+          {"uuid":"23000000-0000-4000-8000-000000000005","control-id":"ca-7","description":"Daily and change-triggered jobs preserve evidence freshness and never translate missing evidence into pass."},
+          {"uuid":"23000000-0000-4000-8000-000000000006","control-id":"cm-2","description":"Compiled infrastructure and immutable image digests form the approved baseline compared to live inventory."},
+          {"uuid":"23000000-0000-4000-8000-000000000007","control-id":"cm-3","description":"Deployment provenance connects pull request, commit, image digest, What-If result, and Azure Activity event."},
+          {"uuid":"23000000-0000-4000-8000-000000000008","control-id":"cp-9","description":"Evidence storage uses versioning, soft delete, lifecycle retention, and restore tests."},
+          {"uuid":"23000000-0000-4000-8000-000000000009","control-id":"ra-3","description":"Findings create immutable risks using a documented 5x5 rubric and explicit treatment authority."},
+          {"uuid":"23000000-0000-4000-8000-000000000010","control-id":"ra-5","description":"SBOM and vulnerability scan outputs are retained and critical unresolved vulnerabilities block release."},
+          {"uuid":"23000000-0000-4000-8000-000000000011","control-id":"sa-11","description":"Deterministic test and contract gates must pass before release evidence is signed."},
+          {"uuid":"23000000-0000-4000-8000-000000000012","control-id":"si-4","description":"Approved KQL queries test telemetry freshness and four focused Sentinel use cases."},
+          {"uuid":"23000000-0000-4000-8000-000000000013","control-id":"ai-gv-01","description":"Reviewer decisions remain authoritative; AI suggestions cannot approve exceptions, accept risk, conclude compliance, or close findings."}
+        ]
+      }]
+    }]
+  }
+}

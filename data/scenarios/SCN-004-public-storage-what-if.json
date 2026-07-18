@@ -1,0 +1,12 @@
+{
+  "$schema":"../../schemas/scenario.schema.json","scenario_id":"SCN-004","title":"Anonymous storage exposure in IaC What-If only",
+  "execution":{"mode":"OFFLINE_REGO","detection_engine":"OPA/Conftest policy aica.azure","azure_live_required_for_release":false,"azure_live_evidence_checked_in":false,"limitation":"This scenario is intentionally offline and must never create an Azure storage account or anonymous data endpoint."},
+  "safety":{"data_classification":"SYNTHETIC","allowed_resource_groups":["offline compiled-template fixture only"],"prohibited_actions":["deploy anonymous access","upload any data","create a live storage account","override policy"],"expires_after_minutes":15},
+  "preconditions":["Compile the compliant storage fixture","Verify allowBlobPublicAccess is false and secure transfer is true"],
+  "baseline":["Run deterministic IaC rules on the compliant template","Require CM-6.1 PASS"],
+  "injection":["Change allowBlobPublicAccess to true in a non-deployable fixture","Run Bicep build and What-If/rule evaluation without deployment credentials"],
+  "expected":{"objective_id":"CM-6.1","status":"FAIL","observation":"The proposed template permits anonymous blob access.","finding_severity":"HIGH","risk_range":[10,16]},
+  "remediation":["Restore allowBlobPublicAccess=false","Retain the negative fixture for CI regression testing"],
+  "retest":["Recompile and require the compliant template to pass","Require the negative fixture to continue failing"],
+  "cleanup":["Confirm no deployment was executed","Verify no Azure resource ID was produced","Keep only sanitized fixture and test output"]
+}

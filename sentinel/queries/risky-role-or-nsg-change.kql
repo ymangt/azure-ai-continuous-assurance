@@ -1,0 +1,24 @@
+let Lookback = 30m;
+AzureActivity
+| where TimeGenerated >= ago(Lookback)
+| where ActivityStatusValue =~ 'Success'
+| where OperationNameValue in~ (
+    'MICROSOFT.AUTHORIZATION/ROLEASSIGNMENTS/WRITE',
+    'MICROSOFT.AUTHORIZATION/ROLEASSIGNMENTS/DELETE',
+    'MICROSOFT.NETWORK/NETWORKSECURITYGROUPS/WRITE',
+    'MICROSOFT.NETWORK/NETWORKSECURITYGROUPS/SECURITYRULES/WRITE',
+    'MICROSOFT.NETWORK/NETWORKSECURITYGROUPS/SECURITYRULES/DELETE'
+)
+| extend ParsedProperties = parse_json(Properties_d)
+| extend RequestBody = tostring(ParsedProperties.requestbody)
+| extend ChangeClass = case(
+    OperationNameValue has 'ROLEASSIGNMENTS', 'RBAC',
+    OperationNameValue has 'SECURITYRULES', 'NSG rule',
+    'NSG'
+)
+| extend RiskSignal = case(
+    RequestBody has_any ('Owner', 'User Access Administrator', 'Role Based Access Control Administrator'), 'privileged-role',
+    RequestBody has_any ('3389', '0.0.0.0/0', '"*"'), 'broad-ingress',
+    'sensitive-control-plane-change'
+)
+| project TimeGenerated, Caller, CallerIpAddress, CorrelationId, ResourceId, ResourceGroup, SubscriptionId, OperationNameValue, ChangeClass, RiskSignal, RequestBody

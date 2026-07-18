@@ -1,0 +1,14 @@
+{
+  "resources": [
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "name": "fixture-public-storage",
+      "properties": {
+        "allowBlobPublicAccess": true,
+        "allowSharedKeyAccess": false,
+        "supportsHttpsTrafficOnly": true,
+        "minimumTlsVersion": "TLS1_2"
+      }
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+{
+  "source":"sentinel.assurance_health","query":"AicaAssurance_CL | summarize arg_max(TimeGenerated, *) by RunId_g","classification":"PUBLIC_SANITIZED","captured_at":"2026-06-01T12:17:00Z",
+  "payload":{"tables":[{"name":"PrimaryResult","columns":["RunId_g","Status_s","FailedObjectives_d","TimeGenerated"],"rows":[{"RunId_g":"018f6d9a-7b10-7c01-8000-000000000001","Status_s":"REVIEW_REQUIRED","FailedObjectives_d":4,"TimeGenerated":"2026-06-01T12:17:00Z"}]}],"RunId_g":"018f6d9a-7b10-7c01-8000-000000000001"}
+}

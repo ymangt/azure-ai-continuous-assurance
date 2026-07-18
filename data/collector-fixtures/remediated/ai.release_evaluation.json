@@ -1,0 +1,4 @@
+{
+  "source":"ai.release_evaluation","query":"deployed and evaluated AI configuration manifest comparison","classification":"PUBLIC_SANITIZED","captured_at":"2026-06-08T12:14:00Z",
+  "payload":{"nodes":[{"release_id":"RELEASE-RETEST-001","evaluation_gate_status":"PASS","evaluation_artifact_sha256":"260d0251f4866c4ddf8ed215f01b6281fad43c2a522c0a1c9b3ead9ba2f4f2f7","evaluated_configuration_sha256":"dc6e65b8171b1b6fe4c5e45747bf98c19a4b7885efae07bed7a1cc47585c7cbb","deployed_configuration_sha256":"dc6e65b8171b1b6fe4c5e45747bf98c19a4b7885efae07bed7a1cc47585c7cbb","failure_reason":null}]}
+}

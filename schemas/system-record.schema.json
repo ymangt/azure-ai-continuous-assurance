@@ -1,0 +1,268 @@
+{
+  "$defs": {
+    "Classification": {
+      "enum": [
+        "PUBLIC",
+        "INTERNAL",
+        "CONFIDENTIAL",
+        "RESTRICTED_TEST_EVIDENCE"
+      ],
+      "title": "Classification",
+      "type": "string"
+    },
+    "SystemClassification": {
+      "additionalProperties": false,
+      "properties": {
+        "classification": {
+          "$ref": "#/$defs/Classification"
+        },
+        "description": {
+          "minLength": 1,
+          "title": "Description",
+          "type": "string"
+        },
+        "handling": {
+          "minLength": 1,
+          "title": "Handling",
+          "type": "string"
+        }
+      },
+      "required": [
+        "classification",
+        "description",
+        "handling"
+      ],
+      "title": "SystemClassification",
+      "type": "object"
+    },
+    "SystemDataFlow": {
+      "additionalProperties": false,
+      "properties": {
+        "classification": {
+          "$ref": "#/$defs/Classification"
+        },
+        "data": {
+          "minLength": 1,
+          "title": "Data",
+          "type": "string"
+        },
+        "destination": {
+          "minLength": 1,
+          "title": "Destination",
+          "type": "string"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "protection": {
+          "minLength": 1,
+          "title": "Protection",
+          "type": "string"
+        },
+        "retention": {
+          "minLength": 1,
+          "title": "Retention",
+          "type": "string"
+        },
+        "source": {
+          "minLength": 1,
+          "title": "Source",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "source",
+        "destination",
+        "data",
+        "classification",
+        "protection",
+        "retention"
+      ],
+      "title": "SystemDataFlow",
+      "type": "object"
+    },
+    "SystemIdentity": {
+      "additionalProperties": false,
+      "properties": {
+        "assigned_scope": {
+          "minLength": 1,
+          "title": "Assigned Scope",
+          "type": "string"
+        },
+        "authentication": {
+          "minLength": 1,
+          "title": "Authentication",
+          "type": "string"
+        },
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "privilege": {
+          "minLength": 1,
+          "title": "Privilege",
+          "type": "string"
+        },
+        "purpose": {
+          "minLength": 1,
+          "title": "Purpose",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "purpose",
+        "privilege",
+        "authentication",
+        "assigned_scope"
+      ],
+      "title": "SystemIdentity",
+      "type": "object"
+    },
+    "SystemInventoryItem": {
+      "additionalProperties": false,
+      "properties": {
+        "lifecycle": {
+          "minLength": 1,
+          "title": "Lifecycle",
+          "type": "string"
+        },
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "plane": {
+          "minLength": 1,
+          "title": "Plane",
+          "type": "string"
+        },
+        "region": {
+          "minLength": 1,
+          "title": "Region",
+          "type": "string"
+        },
+        "type": {
+          "minLength": 1,
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "type",
+        "plane",
+        "region",
+        "lifecycle"
+      ],
+      "title": "SystemInventoryItem",
+      "type": "object"
+    }
+  },
+  "$id": "https://example.invalid/aica/schemas/system-record.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Versioned, runtime system-boundary record included in every package.",
+  "properties": {
+    "boundary": {
+      "minLength": 1,
+      "title": "Boundary",
+      "type": "string"
+    },
+    "classifications": {
+      "items": {
+        "$ref": "#/$defs/SystemClassification"
+      },
+      "minItems": 1,
+      "title": "Classifications",
+      "type": "array"
+    },
+    "data_classification": {
+      "minLength": 1,
+      "title": "Data Classification",
+      "type": "string"
+    },
+    "data_flows": {
+      "items": {
+        "$ref": "#/$defs/SystemDataFlow"
+      },
+      "minItems": 1,
+      "title": "Data Flows",
+      "type": "array"
+    },
+    "exclusions": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Exclusions",
+      "type": "array"
+    },
+    "identities": {
+      "items": {
+        "$ref": "#/$defs/SystemIdentity"
+      },
+      "minItems": 1,
+      "title": "Identities",
+      "type": "array"
+    },
+    "inventory": {
+      "items": {
+        "$ref": "#/$defs/SystemInventoryItem"
+      },
+      "minItems": 1,
+      "title": "Inventory",
+      "type": "array"
+    },
+    "name": {
+      "minLength": 1,
+      "title": "Name",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1.0.0",
+      "default": "1.0.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "shared_responsibility": {
+      "minLength": 1,
+      "title": "Shared Responsibility",
+      "type": "string"
+    },
+    "system_id": {
+      "minLength": 1,
+      "title": "System Id",
+      "type": "string"
+    },
+    "trust_boundaries": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Trust Boundaries",
+      "type": "array"
+    }
+  },
+  "required": [
+    "system_id",
+    "name",
+    "boundary",
+    "data_classification",
+    "data_flows",
+    "trust_boundaries",
+    "inventory",
+    "identities",
+    "classifications",
+    "shared_responsibility",
+    "exclusions"
+  ],
+  "title": "SystemRecord",
+  "type": "object"
+}

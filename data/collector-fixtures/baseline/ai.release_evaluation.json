@@ -1,0 +1,4 @@
+{
+  "source":"ai.release_evaluation","query":"deployed and evaluated AI configuration manifest comparison","classification":"PUBLIC_SANITIZED","captured_at":"2026-06-01T12:14:00Z",
+  "payload":{"nodes":[{"release_id":"RELEASE-BASELINE-001","evaluation_gate_status":"FAIL","evaluation_artifact_sha256":"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd","deployed_configuration_sha256":"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee","failure_reason":"DEPLOYED_DIGEST_MISMATCH"}]}
+}

@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Assurance shield">
+  <rect width="64" height="64" rx="14" fill="#0f2747"/>
+  <path d="M32 10 51 17v14c0 12-7.7 19.9-19 23-11.3-3.1-19-11-19-23V17l19-7Z" fill="#0ea5a4"/>
+  <path d="m22 31 7 7 14-15" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

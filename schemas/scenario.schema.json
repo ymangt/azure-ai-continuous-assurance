@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/aica/schemas/scenario.schema.json",
+  "title": "Safe Failure Scenario",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["scenario_id", "title", "safety", "execution", "preconditions", "baseline", "injection", "expected", "remediation", "retest", "cleanup"],
+  "properties": {
+    "$schema": {"type": "string"},
+    "scenario_id": {"type": "string", "pattern": "^SCN-[0-9]{3}$"},
+    "title": {"type": "string", "minLength": 1},
+    "safety": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["data_classification", "allowed_resource_groups", "prohibited_actions", "expires_after_minutes"],
+      "properties": {
+        "data_classification": {"const": "SYNTHETIC"},
+        "allowed_resource_groups": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "prohibited_actions": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "expires_after_minutes": {"type": "integer", "minimum": 1, "maximum": 240}
+      }
+    },
+    "execution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "detection_engine", "azure_live_required_for_release", "azure_live_evidence_checked_in", "limitation"],
+      "properties": {
+        "mode": {"enum": ["SIGNED_SAMPLE_REPLAY", "CONTROLLED_ARM_TRANSCRIPT", "OFFLINE_REGO", "CONTROLLED_BEHAVIORAL_REPLAY"]},
+        "detection_engine": {"type": "string", "minLength": 1},
+        "azure_live_required_for_release": {"type": "boolean"},
+        "azure_live_evidence_checked_in": {"const": false},
+        "limitation": {"type": "string", "minLength": 1},
+        "required_negative_cases": {"type": "integer", "minimum": 0},
+        "required_confirmed_positive_cases": {"type": "integer", "minimum": 0}
+      }
+    },
+    "preconditions": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "baseline": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "injection": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["objective_id", "status", "observation", "finding_severity", "risk_range"],
+      "properties": {
+        "objective_id": {"type": "string", "minLength": 1},
+        "status": {"const": "FAIL"},
+        "observation": {"type": "string", "minLength": 1},
+        "finding_severity": {"enum": ["LOW", "MODERATE", "HIGH", "CRITICAL"]},
+        "risk_range": {
+          "type": "array",
+          "prefixItems": [{"type": "integer", "minimum": 1, "maximum": 25}, {"type": "integer", "minimum": 1, "maximum": 25}],
+          "items": false,
+          "minItems": 2,
+          "maxItems": 2
+        }
+      }
+    },
+    "remediation": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "retest": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "cleanup": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}
+  }
+}

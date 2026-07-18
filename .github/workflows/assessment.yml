@@ -1,0 +1,180 @@
+name: Assurance assessment
+
+on:
+  workflow_dispatch:
+    inputs:
+      assessed_commit:
+        description: Exact 40-character commit from a successful supply-chain run
+        required: true
+        type: string
+      supply_chain_run_id:
+        description: Successful supply-chain workflow run ID for that exact commit
+        required: true
+        type: string
+  workflow_run:
+    workflows: ['Build, SBOM, attest, and sign images']
+    types: [completed]
+    branches: [main]
+
+permissions:
+  actions: read
+  contents: read
+  id-token: write
+
+concurrency:
+  group: assurance-assessment
+  cancel-in-progress: false
+
+jobs:
+  assess:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+    runs-on: ubuntu-24.04
+    environment: assessment
+    timeout-minutes: 45
+    env:
+      AICA_ASSESSED_GIT_COMMIT: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || inputs.assessed_commit }}
+      AICA_SUPPLY_CHAIN_RUN_ID: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.id || inputs.supply_chain_run_id }}
+    steps:
+      - name: Bind assessment to successful exact-commit supply-chain evidence
+        env:
+          GH_API_URL: ${{ github.api_url }}
+          GH_REPOSITORY: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          [[ "$AICA_ASSESSED_GIT_COMMIT" =~ ^[0-9a-f]{40}$ ]]
+          [[ "$AICA_SUPPLY_CHAIN_RUN_ID" =~ ^[1-9][0-9]*$ ]]
+
+          run_url="${GH_API_URL%/}/repos/${GH_REPOSITORY}/actions/runs/${AICA_SUPPLY_CHAIN_RUN_ID}"
+          run_response=$(curl --fail --silent --show-error \
+            --header 'Accept: application/vnd.github+json' \
+            --header "Authorization: Bearer ${GH_TOKEN}" \
+            --header 'X-GitHub-Api-Version: 2026-03-10' \
+            "$run_url")
+          jq --exit-status \
+            --arg commit "$AICA_ASSESSED_GIT_COMMIT" \
+            --arg run_id "$AICA_SUPPLY_CHAIN_RUN_ID" \
+            '(.id | tostring) == $run_id
+             and ((.path | type) == "string")
+             and (.path == ".github/workflows/supply-chain.yml"
+                  or (.path | startswith(".github/workflows/supply-chain.yml@")))
+             and (.head_sha | ascii_downcase) == $commit
+             and .status == "completed"
+             and .conclusion == "success"' \
+            <<< "$run_response" >/dev/null
+
+          artifacts_response=$(curl --fail --silent --show-error \
+            --header 'Accept: application/vnd.github+json' \
+            --header "Authorization: Bearer ${GH_TOKEN}" \
+            --header 'X-GitHub-Api-Version: 2026-03-10' \
+            "${run_url}/artifacts?per_page=100")
+          jq --exit-status \
+            --arg suffix "-${AICA_ASSESSED_GIT_COMMIT}" \
+            '(.total_count | type) == "number"
+             and .total_count == (.artifacts | length)
+             and ([.artifacts[]
+                    | select(.expired == false)
+                    | select((.name | type) == "string")
+                    | select(.name | startswith("sbom-") and endswith($suffix))
+                    | select((.digest | type) == "string")
+                    | select(.digest | test("^sha256:[0-9a-f]{64}$"))]
+                  | length > 0)' \
+            <<< "$artifacts_response" >/dev/null
+      - name: Check out repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        with:
+          ref: ${{ env.AICA_ASSESSED_GIT_COMMIT }}
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - name: Authenticate collector with OIDC
+        uses: azure/login@532459ea530d8321f2fb9bb10d1e0bcf23869a43
+        with:
+          client-id: ${{ vars.AZURE_COLLECTOR_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - name: Mint least-privilege GitHub App installation token
+        id: github-app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          app-id: ${{ vars.AICA_GITHUB_APP_ID }}
+          private-key: ${{ secrets.AICA_GITHUB_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: ${{ github.repository }}
+          permission-actions: read
+          permission-administration: read
+          permission-security-events: read
+      - name: Verify expected GitHub App installation
+        env:
+          ACTUAL_INSTALLATION_ID: ${{ steps.github-app-token.outputs.installation-id }}
+          EXPECTED_INSTALLATION_ID: ${{ vars.AICA_GITHUB_APP_INSTALLATION_ID }}
+        shell: bash
+        run: |
+          [[ "$EXPECTED_INSTALLATION_ID" =~ ^[1-9][0-9]*$ ]]
+          [[ "$ACTUAL_INSTALLATION_ID" == "$EXPECTED_INSTALLATION_ID" ]]
+      - name: Install assurance CLI
+        run: python -m pip install .
+      - name: Collect, evaluate, report, verify, and sanitize
+        env:
+          AICA_ENV: production
+          AICA_PUBLIC_MODE: 'false'
+          AICA_ARTIFACT_DIR: /tmp/aica-artifacts
+          AICA_AI_EVALUATION_MODE: live
+          AICA_MODEL_ADAPTER: ${{ vars.AICA_MODEL_ADAPTER }}
+          AICA_MODEL_DEPLOYMENT: ${{ vars.AICA_MODEL_DEPLOYMENT }}
+          AICA_FOUNDRY_ENDPOINT: ${{ vars.AICA_FOUNDRY_ENDPOINT }}
+          AICA_PHI_ENDPOINT: ${{ vars.AICA_PHI_ENDPOINT }}
+          AICA_PHI_TOKEN_SCOPE: api://${{ vars.AICA_ASSISTANT_CLIENT_ID }}/.default
+          AICA_DEPLOYED_CONFIGURATION_URL: ${{ vars.AICA_DEPLOYED_CONFIGURATION_URL }}
+          AICA_DEPLOYED_SOURCE_COMMIT: ${{ env.AICA_ASSESSED_GIT_COMMIT }}
+          AICA_ASSURANCE_API_IMAGE_SHA256: ${{ vars.AICA_ASSURANCE_API_IMAGE_SHA256 }}
+          AICA_ASSISTANT_UI_IMAGE_SHA256: ${{ vars.AICA_ASSISTANT_UI_IMAGE_SHA256 }}
+          AICA_ASSURANCE_JOB_IMAGE_SHA256: ${{ vars.AICA_ASSURANCE_JOB_IMAGE_SHA256 }}
+          AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+          AICA_AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+          AICA_AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+          AICA_AZURE_LOG_ANALYTICS_WORKSPACE_ID: ${{ vars.AICA_SENTINEL_WORKSPACE_ID }}
+          AICA_AZURE_BLOB_ENDPOINT: ${{ vars.AICA_AZURE_BLOB_ENDPOINT }}
+          AICA_AZURE_PRIVATE_EVIDENCE_CONTAINER: raw
+          AICA_AZURE_PUBLIC_EVIDENCE_CONTAINER: sanitized
+          AICA_AZURE_KEY_VAULT_URL: ${{ vars.AICA_AZURE_KEY_VAULT_URL }}
+          AICA_AZURE_KEY_NAME: assessment-manifest-es256
+          AICA_TRUSTED_SIGNING_KEY_FINGERPRINTS: ${{ vars.AICA_TRUSTED_SIGNING_KEY_FINGERPRINTS }}
+          AICA_TRUSTED_SIGNING_KEY_ID_PREFIX: ${{ vars.AICA_TRUSTED_SIGNING_KEY_ID_PREFIX }}
+          AICA_GITHUB_REPOSITORY: ${{ github.repository }}
+          AICA_GITHUB_INSTALLATION_TOKEN: ${{ steps.github-app-token.outputs.token }}
+          AICA_AUTHORIZATION_PROBE_ENDPOINT: ${{ vars.AICA_AUTHORIZATION_PROBE_ENDPOINT }}
+          AICA_AUTHORIZATION_PROBE_SCOPE: api://${{ vars.AICA_ASSURANCE_API_CLIENT_ID }}/.default
+          AICA_SENTINEL_DCR_ENDPOINT: ${{ vars.AICA_SENTINEL_DCR_ENDPOINT }}
+          AICA_SENTINEL_DCR_IMMUTABLE_ID: ${{ vars.AICA_SENTINEL_DCR_IMMUTABLE_ID }}
+        shell: bash
+        run: |
+          mkdir -p /tmp/aica-run
+          set +e
+          collection_output=$(assure collect --profile azure-dev --release-gate)
+          collection_status=$?
+          set -e
+          printf '%s\n' "$collection_output"
+          run_id=$(sed -n 's/^run_id=//p' <<< "$collection_output")
+          [[ "$run_id" =~ ^(run-)?[0-9a-fA-F-]{36}$ ]]
+          assure evaluate --run "$run_id" --output /tmp/aica-run/evaluation-preview.json
+          assure report --run "$run_id" --format oscal,html,json,csv --output-dir /tmp/aica-run/reports
+          assure verify --manifest "/tmp/aica-artifacts/private/${run_id}/run-manifest.json"
+          assure verify --manifest "/tmp/aica-artifacts/public/${run_id}/run-manifest.json"
+          assure publish --run "$run_id" --sanitized --destination /tmp/aica-run/sanitized
+          printf '%s\n' "$run_id" > /tmp/aica-run/RUN_ID
+          exit "$collection_status"
+      - name: Upload sanitized assessment output
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: assessment-${{ github.run_id }}
+          path: /tmp/aica-run
+          if-no-files-found: warn
+          retention-days: 30

@@ -1,0 +1,81 @@
+{
+  "$id": "https://example.invalid/aica/schemas/entra-mcp-handoff.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Materialized two-phase Entra application and service-principal request for Azure MCP.",
+  "properties": {
+    "$schema": { "type": "string" },
+    "applications": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "applicationCreate": {
+            "additionalProperties": false,
+            "properties": {
+              "appRoles": { "items": { "type": "object" }, "maxItems": 4, "minItems": 4, "type": "array" },
+              "displayName": { "minLength": 1, "type": "string" },
+              "signInAudience": { "const": "AzureADMyOrg" },
+              "web": {
+                "additionalProperties": false,
+                "properties": {
+                  "implicitGrantSettings": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "enableAccessTokenIssuance": { "const": false },
+                      "enableIdTokenIssuance": { "const": true }
+                    },
+                    "required": ["enableAccessTokenIssuance", "enableIdTokenIssuance"],
+                    "type": "object"
+                  },
+                  "redirectUris": { "items": { "format": "uri", "pattern": "^https://.+/\\.auth/login/aad/callback$", "type": "string" }, "maxItems": 1, "minItems": 1, "type": "array" }
+                },
+                "required": ["implicitGrantSettings", "redirectUris"],
+                "type": "object"
+              }
+            },
+            "required": ["appRoles", "displayName", "signInAudience", "web"],
+            "type": "object"
+          },
+          "applicationPatchAfterCreate": {
+            "additionalProperties": false,
+            "properties": { "identifierUris": { "const": ["api://{clientId}"] } },
+            "required": ["identifierUris"],
+            "type": "object"
+          },
+          "assignmentExpectations": { "type": "object" },
+          "clientIdParameter": { "enum": ["assuranceApiClientId", "assistantClientId"] },
+          "easyAuthReadback": {
+            "additionalProperties": false,
+            "properties": {
+              "allowedAudiences": { "const": ["api://{clientId}"] },
+              "allowedClientApplications": { "const": ["{clientId}"] },
+              "callbackUri": { "format": "uri", "type": "string" }
+            },
+            "required": ["allowedAudiences", "allowedClientApplications", "callbackUri"],
+            "type": "object"
+          },
+          "key": { "enum": ["assurance-console", "policy-assistant"] },
+          "servicePrincipalPatch": {
+            "additionalProperties": false,
+            "properties": { "appRoleAssignmentRequired": { "const": true } },
+            "required": ["appRoleAssignmentRequired"],
+            "type": "object"
+          }
+        },
+        "required": ["applicationCreate", "applicationPatchAfterCreate", "assignmentExpectations", "clientIdParameter", "easyAuthReadback", "key", "servicePrincipalPatch"],
+        "type": "object"
+      },
+      "maxItems": 2,
+      "minItems": 2,
+      "type": "array"
+    },
+    "completionEvidence": { "items": { "minLength": 1, "type": "string" }, "minItems": 5, "type": "array" },
+    "environment": { "enum": ["dev", "demo"] },
+    "foundationOutputsSha256": { "pattern": "^[0-9a-f]{64}$", "type": "string" },
+    "mutationChannel": { "const": "Azure MCP only" },
+    "schemaVersion": { "const": "1.0.0" },
+    "status": { "const": "READY_FOR_AZURE_MCP" }
+  },
+  "required": ["$schema", "applications", "completionEvidence", "environment", "foundationOutputsSha256", "mutationChannel", "schemaVersion", "status"],
+  "type": "object"
+}

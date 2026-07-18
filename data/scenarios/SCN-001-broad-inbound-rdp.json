@@ -1,0 +1,12 @@
+{
+  "$schema":"../../schemas/scenario.schema.json","scenario_id":"SCN-001","title":"Broad inbound RDP on an unattached NSG",
+  "execution":{"mode":"SIGNED_SAMPLE_REPLAY","detection_engine":"aica.evaluation.RuleEngine:R-SC-7-01","azure_live_required_for_release":true,"azure_live_evidence_checked_in":false,"limitation":"The checked-in package is a signed sanitized sample; rerun the allowlisted NSG campaign through Azure MCP before claiming live execution."},
+  "safety":{"data_classification":"SYNTHETIC","allowed_resource_groups":["rg-aica-fixture-eus2","existing unattached lab NSG by explicit allowlist"],"prohibited_actions":["attach the NSG to a subnet or NIC","create a public IP or virtual machine","target an external host","retain the rule after expiry"],"expires_after_minutes":60},
+  "preconditions":["Verify the NSG has zero subnet and NIC attachments","Capture a clean no-RDP baseline","Confirm fixture allowlist and expiry tags"],
+  "baseline":["Collect NSG rules and attachment inventory","Require SC-7.1 PASS before injection"],
+  "injection":["Use the allowlisted legacy unattached NSG or deploy an unattached NSG with source Any and TCP/3389","Do not create any compute, interface, subnet attachment, or public IP"],
+  "expected":{"objective_id":"SC-7.1","status":"FAIL","observation":"An unattached NSG contains an Internet RDP allow rule.","finding_severity":"HIGH","risk_range":[8,12]},
+  "remediation":["Remove the rule through version-controlled configuration","Record pull request, commit, What-If, and deployment evidence"],
+  "retest":["Collect fresh rules and attachment inventory","Require no Internet RDP or SSH rule","Reviewer closes only after fresh PASS evidence"],
+  "cleanup":["Delete temporary NSG if created","Verify the fixture resource group contains no scenario-tagged resource","Record cleanup query digest and result"]
+}

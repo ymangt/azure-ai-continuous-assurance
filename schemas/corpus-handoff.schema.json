@@ -1,0 +1,65 @@
+{
+  "$id": "https://example.invalid/aica/schemas/corpus-handoff.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Deterministic, create-only Azure MCP handoff for one immutable synthetic policy corpus version.",
+  "properties": {
+    "$schema": { "type": "string" },
+    "azureMcp": {
+      "additionalProperties": false,
+      "properties": {
+        "mutationChannel": { "const": "Azure MCP only" },
+        "tool": { "const": "mcp__azure__storage" },
+        "uploadCommand": { "const": "storage_blob_upload" },
+        "verificationCommand": { "const": "storage_blob_get" }
+      },
+      "required": ["mutationChannel", "tool", "uploadCommand", "verificationCommand"],
+      "type": "object"
+    },
+    "container": { "const": "synthetic-corpus" },
+    "corpus": {
+      "additionalProperties": false,
+      "properties": {
+        "classification": { "const": "SYNTHETIC" },
+        "documentCount": { "maximum": 25, "minimum": 15, "type": "integer" },
+        "id": { "minLength": 1, "type": "string" },
+        "manifestSha256": { "pattern": "^[0-9a-f]{64}$", "type": "string" },
+        "prefix": { "pattern": "^[A-Za-z0-9._-]+/[A-Za-z0-9._-]+$", "type": "string" },
+        "version": { "minLength": 1, "type": "string" }
+      },
+      "required": ["classification", "documentCount", "id", "manifestSha256", "prefix", "version"],
+      "type": "object"
+    },
+    "payload": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "blobName": { "minLength": 1, "type": "string" },
+          "contentType": { "minLength": 1, "type": "string" },
+          "documentId": { "type": ["string", "null"] },
+          "localFile": { "pattern": "^payload/", "type": "string" },
+          "path": { "minLength": 1, "type": "string" },
+          "sha256": { "pattern": "^[0-9a-f]{64}$", "type": "string" },
+          "sizeBytes": { "minimum": 1, "type": "integer" }
+        },
+        "required": ["blobName", "contentType", "documentId", "localFile", "path", "sha256", "sizeBytes"],
+        "type": "object"
+      },
+      "minItems": 16,
+      "type": "array"
+    },
+    "postconditions": {
+      "additionalProperties": false,
+      "properties": {
+        "applicationStartupVerification": { "minLength": 1, "type": "string" },
+        "exactBlobSetRequired": { "const": true },
+        "materializationReceiptRequiredBeforeWorkloads": { "const": true }
+      },
+      "required": ["applicationStartupVerification", "exactBlobSetRequired", "materializationReceiptRequiredBeforeWorkloads"],
+      "type": "object"
+    },
+    "schemaVersion": { "const": "1.0.0" }
+  },
+  "required": ["$schema", "azureMcp", "container", "corpus", "payload", "postconditions", "schemaVersion"],
+  "type": "object"
+}

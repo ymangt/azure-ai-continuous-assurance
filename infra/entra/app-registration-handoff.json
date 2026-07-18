@@ -1,0 +1,151 @@
+{
+  "$schema": "../../schemas/entra-app-registration-handoff.schema.json",
+  "applications": [
+    {
+      "appRoles": [
+        {
+          "allowedMemberTypes": ["User"],
+          "description": "May queue assessments and retests and prepare the assistant's confirmation-bound synthetic action; cannot record reviewer or risk-approval decisions.",
+          "displayName": "Assurance assessor",
+          "id": "0835a531-061c-56c7-ac6f-8b5e0b84ae65",
+          "isEnabled": true,
+          "value": "Assurance.Assessor"
+        },
+        {
+          "allowedMemberTypes": ["User"],
+          "description": "May append reviewer decisions and remediation records; cannot accept risk or approve an exception unless separately assigned RiskApprover.",
+          "displayName": "Assurance reviewer",
+          "id": "60b61bb7-b386-518f-b8b2-be252afd5e35",
+          "isEnabled": true,
+          "value": "Assurance.Reviewer"
+        },
+        {
+          "allowedMemberTypes": ["User"],
+          "description": "May append risk-treatment and exception decisions and reviewer decisions; does not grant Azure resource-plane authority.",
+          "displayName": "Assurance risk approver",
+          "id": "d90725f3-6a27-5444-9d7e-8c7e738542b6",
+          "isEnabled": true,
+          "value": "Assurance.RiskApprover"
+        },
+        {
+          "allowedMemberTypes": ["Application"],
+          "description": "Allows only the collector managed identity to obtain a Console-audience token for the expected Easy Auth 403 negative-authorization probe; grants no API command.",
+          "displayName": "Assurance authorization probe",
+          "id": "849e3d13-a01e-5f60-8891-75433ea4d9fa",
+          "isEnabled": true,
+          "value": "Assurance.AuthorizationProbe"
+        }
+      ],
+      "assignmentExpectations": {
+        "appRoleAssignmentRequired": true,
+        "noDefaultAccess": true,
+        "personaAssignments": [
+          { "minimumAssignments": 1, "principalType": "UserOrGroup", "role": "Assurance.Assessor", "use": "queue an assessment or retest" },
+          { "minimumAssignments": 1, "principalType": "UserOrGroup", "role": "Assurance.Reviewer", "use": "append a reviewer decision or remediation" },
+          { "minimumAssignments": 1, "principalType": "UserOrGroup", "role": "Assurance.RiskApprover", "use": "approve an exception or risk decision" }
+        ],
+        "prohibitedPrincipals": ["GitHub deploy identity", "public anonymous user"],
+        "workloadAssignments": [
+          { "minimumAssignments": 1, "principal": "collector managed identity", "principalType": "ServicePrincipal", "role": "Assurance.AuthorizationProbe", "use": "mint a Console-audience token that Easy Auth deliberately rejects with 403" }
+        ]
+      },
+      "authorizedAudiences": ["api://{clientId}"],
+      "clientIdParameter": "assuranceApiClientId",
+      "displayNameTemplate": "aica-assurance-console-{environment}",
+      "easyAuthAllowedClientApplications": ["{clientId}"],
+      "identifierUriTemplate": "api://{clientId}",
+      "key": "assurance-console",
+      "redirectUri": {
+        "foundationOutput": "assuranceAuthRedirectUri",
+        "requiredSuffix": "/.auth/login/aad/callback",
+        "type": "Web"
+      },
+      "roleClaimConsumer": "The assurance API consumes the roles claim from X-MS-CLIENT-PRINCIPAL and denies commands by default.",
+      "runtimeSurface": "private Assurance Console and assurance API"
+    },
+    {
+      "appRoles": [
+        {
+          "allowedMemberTypes": ["User"],
+          "description": "May use the assistant and prepare its confirmation-bound synthetic action; no assistant action can record an assurance conclusion.",
+          "displayName": "Assurance assessor",
+          "id": "2f6338c0-363f-5065-9974-5ab2b5ac7334",
+          "isEnabled": true,
+          "value": "Assurance.Assessor"
+        },
+        {
+          "allowedMemberTypes": ["User"],
+          "description": "May authenticate for policy lookup but receives no consequential assistant-tool permission from this role.",
+          "displayName": "Assurance reviewer",
+          "id": "910460a2-68a8-5fb9-85fb-91a13397eb6b",
+          "isEnabled": true,
+          "value": "Assurance.Reviewer"
+        },
+        {
+          "allowedMemberTypes": ["User"],
+          "description": "May authenticate for policy lookup but receives no consequential assistant-tool permission from this role.",
+          "displayName": "Assurance risk approver",
+          "id": "647d1f57-0550-57aa-b2e0-955ec2a9f9a7",
+          "isEnabled": true,
+          "value": "Assurance.RiskApprover"
+        },
+        {
+          "allowedMemberTypes": ["Application"],
+          "description": "Allows the assistant and collector managed identities to obtain an assistant-audience token for the identity-restricted Phi inference endpoint; grants no human assistant tool permission.",
+          "displayName": "Assurance workload invoker",
+          "id": "445a511d-fec9-5c1b-b06c-16622b6b3e01",
+          "isEnabled": true,
+          "value": "Assurance.WorkloadInvoker"
+        }
+      ],
+      "assignmentExpectations": {
+        "appRoleAssignmentRequired": true,
+        "noDefaultAccess": true,
+        "personaAssignments": [
+          { "minimumAssignments": 1, "principalType": "UserOrGroup", "role": "Assurance.Assessor", "use": "policy lookup and confirmation-bound synthetic action" },
+          { "minimumAssignments": 0, "principalType": "UserOrGroup", "role": "Assurance.Reviewer", "use": "optional policy lookup only" },
+          { "minimumAssignments": 0, "principalType": "UserOrGroup", "role": "Assurance.RiskApprover", "use": "optional policy lookup only" }
+        ],
+        "prohibitedPrincipals": ["GitHub deploy identity", "public anonymous user"],
+        "workloadAssignments": [
+          { "minimumAssignments": 1, "principal": "assistant managed identity", "principalType": "ServicePrincipal", "role": "Assurance.WorkloadInvoker", "use": "mint an assistant-audience token for the Phi inference endpoint" },
+          { "minimumAssignments": 1, "principal": "collector managed identity", "principalType": "ServicePrincipal", "role": "Assurance.WorkloadInvoker", "use": "mint an assistant-audience token for live behavioral collection against Phi" }
+        ]
+      },
+      "authorizedAudiences": ["api://{clientId}"],
+      "clientIdParameter": "assistantClientId",
+      "displayNameTemplate": "aica-policy-assistant-{environment}",
+      "easyAuthAllowedClientApplications": ["{clientId}"],
+      "identifierUriTemplate": "api://{clientId}",
+      "key": "policy-assistant",
+      "redirectUri": {
+        "foundationOutput": "assistantAuthRedirectUri",
+        "requiredSuffix": "/.auth/login/aad/callback",
+        "type": "Web"
+      },
+      "roleClaimConsumer": "The assistant API consumes the roles claim from X-MS-CLIENT-PRINCIPAL; only Assurance.Assessor can prepare or execute the synthetic consequential tool.",
+      "runtimeSurface": "private Policy Assistant"
+    }
+  ],
+  "credentialPolicy": {
+    "accessTokenIssuanceEnabled": false,
+    "clientSecretsAllowed": false,
+    "idTokenIssuanceEnabled": true,
+    "note": "The checked-in Container Apps Easy Auth configuration uses the ID-token-only browser flow and has no client-secret setting. Any future confidential-client flow requires a separately reviewed Key Vault-backed design."
+  },
+  "externalGate": {
+    "mutationChannel": "Azure MCP only",
+    "requiredEvidence": [
+      "foundation deployment output digest containing both callback URIs",
+      "application and service-principal object IDs and application client IDs",
+      "exact manifest/app-role readback for both registrations",
+      "appRoleAssignmentRequired readback for both service principals",
+      "role-assignment readback with principal identifiers retained only as private evidence",
+      "negative authorization probes for no role and wrong role"
+    ],
+    "statusUntilReceipt": "BLOCKED"
+  },
+  "schemaVersion": "1.0.0",
+  "signInAudience": "AzureADMyOrg",
+  "tenantScope": "single tenant"
+}

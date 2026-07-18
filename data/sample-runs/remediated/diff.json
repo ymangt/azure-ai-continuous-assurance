@@ -1,0 +1,23 @@
+{
+  "$schema":"../../../schemas/assessment-diff.schema.json",
+  "from_run_id":"018f6d9a-7b10-7c01-8000-000000000001",
+  "to_run_id":"018f6d9a-7b10-7c01-8000-000000000002",
+  "generated_at":"2026-06-08T12:24:30Z",
+  "summary":{"resolved":5,"regressed":0,"new":0,"unchanged":28,"not_applicable":2,"stale":0,"errored":0},
+  "resolved":[
+    {"objective_id":"SC-7.1","from_status":"FAIL","to_status":"PASS","from_result_ref":"TR-B-025","to_result_ref":"TR-R-025","finding_ref":"FND-001","retest_ref":"RET-001"},
+    {"objective_id":"SI-4.1","from_status":"ERROR","to_status":"PASS","from_result_ref":"TR-B-028","to_result_ref":"TR-R-028","finding_ref":null,"retest_ref":"RET-005"},
+    {"objective_id":"AI-DP-01.1","from_status":"FAIL","to_status":"PASS","from_result_ref":"TR-B-031","to_result_ref":"TR-R-031","finding_ref":"FND-002","retest_ref":"RET-002"},
+    {"objective_id":"AI-AC-01.1","from_status":"FAIL","to_status":"PASS","from_result_ref":"TR-B-032","to_result_ref":"TR-R-032","finding_ref":"FND-003","retest_ref":"RET-003"},
+    {"objective_id":"AI-TE-01.1","from_status":"FAIL","to_status":"PASS","from_result_ref":"TR-B-033","to_result_ref":"TR-R-033","finding_ref":"FND-004","retest_ref":"RET-004"}
+  ],
+  "regressed":[],"new":[],"stale":[],"errored":[],
+  "status_changes":[{"objective_id":"AI-MO-01.2","from_status":"NOT_RUN","to_status":"NOT_APPLICABLE","reason":"Targeted retest applicability decision; baseline manual evidence remains current."}],
+  "risk_changes":[
+    {"risk_id":"RSK-001","from_score":8,"to_score":3,"from_status":"OPEN","to_status":"CLOSED"},
+    {"risk_id":"RSK-002","from_score":12,"to_score":6,"from_status":"OPEN","to_status":"CLOSED"},
+    {"risk_id":"RSK-003","from_score":10,"to_score":4,"from_status":"OPEN","to_status":"CLOSED"},
+    {"risk_id":"RSK-004","from_score":9,"to_score":3,"from_status":"OPEN","to_status":"CLOSED"},
+    {"risk_id":"RSK-005","from_score":null,"to_score":6,"from_status":null,"to_status":"ACCEPTED_WITH_EXCEPTION","reason":"Public-endpoint residual risk formalized rather than hidden."}
+  ]
+}

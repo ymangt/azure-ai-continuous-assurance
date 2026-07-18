@@ -1,0 +1,7 @@
+{
+  "source": "synthetic MCP quota-check fixture",
+  "region": "eastus2",
+  "model": "gpt-4o-mini",
+  "deploymentType": "GlobalStandard",
+  "deployableQuota": 1
+}

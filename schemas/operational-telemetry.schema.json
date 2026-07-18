@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/aica/schemas/operational-telemetry.schema.json",
+  "title": "AICA content-minimized operational telemetry",
+  "description": "Persistent metadata for one Policy Assistant interaction. Raw prompt, response, citation excerpt, retrieved content, credentials, and direct identities are forbidden by the closed schema.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "SchemaVersion",
+    "TimeGenerated",
+    "EventName",
+    "CorrelationId",
+    "EvaluationId",
+    "UserPseudonym",
+    "SessionId",
+    "Model",
+    "ModelVersion",
+    "RetrievalDocumentIds",
+    "RetrievalClassifications",
+    "LatencyMs",
+    "InputTokens",
+    "OutputTokens",
+    "Status",
+    "GuardrailOutcomes",
+    "ToolName",
+    "AuthorizationDecision",
+    "ConfirmationState",
+    "ToolResultStatus",
+    "Decision",
+    "Reason"
+  ],
+  "properties": {
+    "SchemaVersion": { "const": "1.0.0" },
+    "TimeGenerated": { "type": "string", "format": "date-time" },
+    "EventName": {
+      "enum": ["assistant_interaction", "tool_authorization"]
+    },
+    "CorrelationId": { "type": "string", "minLength": 1 },
+    "EvaluationId": { "type": "string", "minLength": 1 },
+    "UserPseudonym": { "type": "string", "minLength": 1 },
+    "SessionId": { "type": "string", "minLength": 1 },
+    "Model": { "type": "string", "minLength": 1 },
+    "ModelVersion": { "type": "string", "minLength": 1 },
+    "RetrievalDocumentIds": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    },
+    "RetrievalClassifications": {
+      "type": "array",
+      "items": {
+        "enum": ["PUBLIC", "INTERNAL", "CONFIDENTIAL", "RESTRICTED_TEST_EVIDENCE"]
+      }
+    },
+    "LatencyMs": { "type": "integer", "minimum": 0 },
+    "InputTokens": {
+      "anyOf": [{ "type": "integer", "minimum": 0 }, { "type": "null" }]
+    },
+    "OutputTokens": {
+      "anyOf": [{ "type": "integer", "minimum": 0 }, { "type": "null" }]
+    },
+    "Status": { "enum": ["SUCCESS", "REJECTED", "ERROR"] },
+    "GuardrailOutcomes": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "ToolName": {
+      "anyOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }]
+    },
+    "AuthorizationDecision": {
+      "enum": ["ALLOWED", "DENIED", "NOT_REQUIRED", null]
+    },
+    "ConfirmationState": {
+      "enum": [
+        "CONFIRMED",
+        "MISSING",
+        "INVALID",
+        "EXPIRED",
+        "REPLAYED",
+        "MISMATCH",
+        "NOT_REQUIRED",
+        null
+      ]
+    },
+    "ToolResultStatus": {
+      "enum": ["EXECUTED", "REJECTED", "NOT_REQUESTED", null]
+    },
+    "Decision": { "type": "string", "minLength": 1 },
+    "Reason": {
+      "anyOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }]
+    }
+  }
+}

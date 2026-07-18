@@ -1,0 +1,14 @@
+{
+  "resources": [
+    {
+      "id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-aica-fixture-eus2/providers/Microsoft.ManagedIdentity/userAssignedIdentities/id-aica-fixture-excessive",
+      "tags": {
+        "fixture": "true",
+        "expiresOn": "2020-01-01T00:00:00Z",
+        "scenarioId": "excessive-managed-identity-privilege",
+        "owner": "portfolio-owner",
+        "dataClassification": "synthetic"
+      }
+    }
+  ]
+}

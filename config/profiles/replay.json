@@ -1,0 +1,20 @@
+{
+  "name": "replay",
+  "description": "Deterministic public/CI assessment profile.",
+  "trigger": "manual",
+  "scope": ["synthetic/aica-demo"],
+  "collectors": ["replay"],
+  "fixture_dir": "data/collector-fixtures/baseline",
+  "objective_path": "assurance/controls/control-profile.json",
+  "system_record_path": "config/system-record.json",
+  "observation_window_hours": 24,
+  "estimated_cost_cad": 0.0,
+  "cost_breakdown": {
+    "currency": "CAD",
+    "model_estimate_cad": 0.0,
+    "compute_estimate_cad": 0.0,
+    "storage_estimate_cad": 0.0,
+    "telemetry_estimate_cad": 0.0,
+    "total_estimate_cad": 0.0
+  }
+}

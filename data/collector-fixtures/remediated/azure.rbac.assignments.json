@@ -1,0 +1,9 @@
+{
+  "source":"azure.rbac.assignments","query":"AuthorizationResources | where type =~ 'microsoft.authorization/roleassignments' | project sanitized assignment fields","classification":"PUBLIC_SANITIZED","captured_at":"2026-06-08T12:02:00Z",
+  "payload":{"nodes":[
+    {"principal":"collector-sanitized","principalType":"ServicePrincipal","roleDefinitionName":"Reader","scope":"project-resource-groups"},
+    {"principal":"collector-sanitized","principalType":"ServicePrincipal","roleDefinitionName":"Log Analytics Reader","scope":"existing-security-workspace"},
+    {"principal":"assistant-sanitized","principalType":"ServicePrincipal","roleDefinitionName":"Storage Blob Data Reader","scope":"synthetic-corpus"},
+    {"principal":"console-sanitized","principalType":"ServicePrincipal","roleDefinitionName":"Storage Table Data Contributor","scope":"review-decisions-table"}
+  ]}
+}

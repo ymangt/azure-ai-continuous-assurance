@@ -1,0 +1,64 @@
+{
+  "resources": [
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "name": "staicacompliant",
+      "properties": {
+        "allowBlobPublicAccess": false,
+        "allowSharedKeyAccess": false,
+        "supportsHttpsTrafficOnly": true,
+        "minimumTlsVersion": "TLS1_2",
+        "publicNetworkAccess": "Enabled"
+      }
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts/blobServices",
+      "name": "staicacompliant/default",
+      "properties": {
+        "isVersioningEnabled": true,
+        "deleteRetentionPolicy": {"enabled": true, "days": 14}
+      }
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults",
+      "name": "kv-aica-compliant",
+      "properties": {
+        "enableRbacAuthorization": true,
+        "enablePurgeProtection": true,
+        "publicNetworkAccess": "Enabled"
+      }
+    },
+    {
+      "type": "Microsoft.CognitiveServices/accounts",
+      "name": "aif-aica-compliant",
+      "properties": {
+        "disableLocalAuth": true,
+        "publicNetworkAccess": "Enabled"
+      }
+    },
+    {
+      "type": "Microsoft.App/containerApps",
+      "name": "ca-aica-compliant",
+      "properties": {
+        "template": {
+          "containers": [
+            {"image": "ghcr.io/example/aica@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}
+          ],
+          "scale": {"minReplicas": 0, "maxReplicas": 2}
+        }
+      }
+    },
+    {
+      "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
+      "name": "id-aica-fixture",
+      "tags": {
+        "fixture": "true",
+        "expiresOn": "2026-07-17T00:00:00Z",
+        "scenarioId": "excessive-managed-identity-privilege",
+        "owner": "portfolio-owner",
+        "dataClassification": "synthetic"
+      },
+      "properties": {}
+    }
+  ]
+}

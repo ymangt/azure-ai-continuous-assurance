@@ -1,0 +1,71 @@
+[build-system]
+requires = ["hatchling>=1.26"]
+build-backend = "hatchling.build"
+
+[project]
+name = "azure-ai-continuous-assurance"
+version = "0.1.0"
+description = "Evidence-first continuous assurance simulation for an Azure AI policy assistant"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+authors = [{ name = "Azure AI Continuous Assurance contributors" }]
+dependencies = [
+  "azure-identity>=1.19,<2",
+  "azure-keyvault-keys>=4.10,<5",
+  "azure-monitor-opentelemetry>=1.8.9,<2",
+  "azure-data-tables>=12.6,<13",
+  "azure-monitor-query>=1.4,<2",
+  "azure-storage-blob>=12.24,<13",
+  "cryptography>=44,<46",
+  "fastapi>=0.115,<1",
+  "httpx>=0.28,<1",
+  "jinja2>=3.1,<4",
+  "pydantic>=2.10,<3",
+  "pydantic-settings>=2.7,<3",
+  "python-multipart>=0.0.20,<1",
+  "typer>=0.15,<1",
+  "uvicorn[standard]>=0.34,<1",
+]
+
+[project.optional-dependencies]
+dev = [
+  "jsonschema>=4.23,<5",
+  "mypy>=1.14,<2",
+  "pytest>=8.3,<9",
+  "pytest-asyncio>=0.25,<1",
+  "pytest-cov>=6,<7",
+  "regex>=2024.11,<2027",
+  "respx>=0.22,<1",
+  "ruff>=0.9,<1",
+]
+
+[project.scripts]
+assure = "aica.cli:app"
+aica-api = "aica.api:run"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/aica"]
+
+[tool.pytest.ini_options]
+addopts = "-ra --strict-markers --strict-config"
+testpaths = ["tests"]
+asyncio_mode = "auto"
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "S", "RUF"]
+ignore = ["E501", "S101"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S106"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+packages = ["aica"]
+warn_unreachable = true

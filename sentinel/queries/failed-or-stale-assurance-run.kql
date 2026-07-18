@@ -1,0 +1,19 @@
+let FailureEvents = AicaAssurance_CL
+| where TimeGenerated >= ago(30m)
+| where Status in~ ('FAILED', 'STALE')
+| project TimeGenerated, RunId, Status, Scope, CorrelationId, GitCommit, Signal='reported-failure';
+let LastSuccessfulRun = toscalar(
+    AicaAssurance_CL
+    | where Status in~ ('COMPLETED', 'REVIEW_REQUIRED')
+    | summarize max(TimeGenerated)
+);
+let StaleHeartbeat = print
+    TimeGenerated=now(),
+    RunId='heartbeat-missing',
+    Status='STALE',
+    Scope='scheduled-assurance',
+    CorrelationId='none',
+    GitCommit='unknown',
+    Signal='no-success-within-26-hours'
+| where isnull(LastSuccessfulRun) or LastSuccessfulRun < ago(26h);
+union FailureEvents, StaleHeartbeat

@@ -1,0 +1,19 @@
+{
+  "status": "Succeeded",
+  "properties": {
+    "changes": [
+      {
+        "changeType": "Create",
+        "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/providers/Microsoft.Authorization/roleAssignments/11111111-1111-1111-1111-111111111111",
+        "after": {
+          "type": "Microsoft.Authorization/roleAssignments",
+          "properties": {
+            "principalId": "00000000-0000-0000-0000-000000000001",
+            "principalType": "ServicePrincipal",
+            "roleDefinitionId": "/subscriptions/00000000-0000-0000-0000-000000000000/providers/Microsoft.Authorization/roleDefinitions/39bc4728-0917-49c7-9d2c-d95423bc2eb4"
+          }
+        }
+      }
+    ]
+  }
+}

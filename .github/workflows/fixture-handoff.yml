@@ -1,0 +1,81 @@
+name: Prepare protected failure-injection handoff
+
+on:
+  workflow_dispatch:
+    inputs:
+      scenario_id:
+        description: Safe deployable fixture scenario
+        required: true
+        type: choice
+        options:
+          - excessive-managed-identity-privilege
+          - missing-diagnostic-settings
+      approval_token:
+        description: Enter APPROVE_SYNTHETIC_FIXTURE
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  fixture-handoff:
+    runs-on: ubuntu-24.04
+    environment: failure-injection
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+      - name: Validate explicit approval
+        env:
+          APPROVAL: ${{ inputs.approval_token }}
+        run: test "$APPROVAL" = APPROVE_SYNTHETIC_FIXTURE
+      - name: Authenticate deploy identity with OIDC (read-only preflight)
+        uses: azure/login@532459ea530d8321f2fb9bb10d1e0bcf23869a43
+        with:
+          client-id: ${{ vars.AZURE_DEPLOY_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - name: Confirm fixture group allowlist (read-only)
+        run: |
+          test "${{ vars.AICA_FIXTURE_RESOURCE_GROUP }}" = rg-aica-fixture-eus2
+          az group show --name rg-aica-fixture-eus2 --query '{id:id,tags:tags}' --output json > /tmp/fixture-group.json
+      - name: Install pinned Bicep CLI
+        run: |
+          curl --fail --location --silent --show-error --output /tmp/bicep \
+            https://github.com/Azure/bicep/releases/download/v0.45.15/bicep-linux-x64
+          echo 'ff5b194b042c220df4a50d6768ed1d6c39a32894bfdc4ff83d62b115d966a7ce  /tmp/bicep' | sha256sum --check
+          chmod +x /tmp/bicep
+      - name: Create expiring parameter artifact
+        env:
+          SCENARIO: ${{ inputs.scenario_id }}
+          BUDGET_EMAIL: ${{ secrets.BUDGET_CONTACT_EMAIL }}
+        shell: bash
+        run: |
+          [[ "$BUDGET_EMAIL" =~ ^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$ ]]
+          expiry=$(date -u -d '+6 hours' '+%Y-%m-%dT%H:%M:%SZ')
+          cp infra/parameters/student.fixture-example.bicepparam infra/parameters/fixture.generated.bicepparam
+          sed -i "s/excessive-managed-identity-privilege/${SCENARIO}/" infra/parameters/fixture.generated.bicepparam
+          sed -i "s/REPLACE_WITH_RFC3339_UTC/${expiry}/" infra/parameters/fixture.generated.bicepparam
+          sed -i "s/REPLACE_ME@example.com/${BUDGET_EMAIL}/" infra/parameters/fixture.generated.bicepparam
+          BICEP_BIN=/tmp/bicep scripts/azure/preflight.sh infra/parameters/fixture.generated.bicepparam
+          /tmp/bicep build infra/main.bicep --outfile /tmp/aica-main.json
+          /tmp/bicep build-params infra/parameters/fixture.generated.bicepparam --outfile /tmp/aica-fixture-parameters.json
+          sha256sum /tmp/aica-main.json /tmp/aica-fixture-parameters.json > /tmp/SHA256SUMS
+          printf '%s\n' \
+            'Azure MCP must run What-If and deployment.' \
+            'Cleanup must use plan-fixture-cleanup.py with an MCP inventory and exact confirmation token.' \
+            'Postcondition: no resource with this scenarioId remains.' > /tmp/CLEANUP-GUARD.txt
+      - name: Upload fixture MCP handoff
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: fixture-mcp-handoff-${{ github.run_id }}
+          path: |
+            /tmp/aica-main.json
+            /tmp/aica-fixture-parameters.json
+            /tmp/SHA256SUMS
+            /tmp/CLEANUP-GUARD.txt
+            /tmp/fixture-group.json
+          if-no-files-found: error
+          retention-days: 3

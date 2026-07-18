@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/aica/deployment-image-readback-receipt.schema.json",
+  "title": "Azure MCP deployment image readback receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "assessmentJob",
+    "mcpEvidenceSha256",
+    "mutationChannel",
+    "policyAssistant",
+    "schemaVersion",
+    "sourceCommit",
+    "sourceImageSetSha256",
+    "status",
+    "subscriptionId",
+    "verifiedAt"
+  ],
+  "properties": {
+    "$schema": {"const": "../../schemas/deployment-image-readback-receipt.schema.json"},
+    "schemaVersion": {"const": "1.0.0"},
+    "status": {"const": "VERIFIED"},
+    "mutationChannel": {"const": "Azure MCP read-only"},
+    "verifiedAt": {"type": "string", "format": "date-time", "pattern": "Z$"},
+    "subscriptionId": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "sourceCommit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "sourceImageSetSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "mcpEvidenceSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "policyAssistant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["activeRevision", "activeRevisionTrafficWeight", "containers", "provenanceTags", "resourceId"],
+      "properties": {
+        "resourceId": {"type": "string", "minLength": 1},
+        "activeRevision": {"type": "string", "pattern": "^[a-z0-9][a-z0-9.-]{0,127}$"},
+        "activeRevisionTrafficWeight": {"const": 100},
+        "containers": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["policy-assistant-api", "policy-assistant-ui"],
+          "properties": {
+            "policy-assistant-api": {"$ref": "#/$defs/imageReference"},
+            "policy-assistant-ui": {"$ref": "#/$defs/imageReference"}
+          }
+        },
+        "provenanceTags": {"$ref": "#/$defs/provenanceTags"}
+      }
+    },
+    "assessmentJob": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["container", "provenanceTags", "resourceId"],
+      "properties": {
+        "resourceId": {"type": "string", "minLength": 1},
+        "container": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["image", "name"],
+          "properties": {
+            "name": {"const": "assessor"},
+            "image": {"$ref": "#/$defs/imageReference"}
+          }
+        },
+        "provenanceTags": {"$ref": "#/$defs/provenanceTags"}
+      }
+    }
+  },
+  "$defs": {
+    "imageReference": {
+      "type": "string",
+      "pattern": "^ghcr\\.io/[a-z0-9._-]+/aica-[a-z0-9-]+@sha256:[0-9a-f]{64}$"
+    },
+    "provenanceTags": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["assuranceApiImageSha256", "assuranceJobImageSha256", "assistantUiImageSha256", "deployedSourceCommit"],
+      "properties": {
+        "deployedSourceCommit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "assuranceApiImageSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "assistantUiImageSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "assuranceJobImageSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    }
+  }
+}

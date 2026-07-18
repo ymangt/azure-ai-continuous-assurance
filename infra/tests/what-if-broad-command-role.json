@@ -1,0 +1,28 @@
+{
+  "status": "Succeeded",
+  "properties": {
+    "changes": [
+      {
+        "changeType": "Modify",
+        "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/providers/Microsoft.Authorization/roleDefinitions/11111111-1111-1111-1111-111111111111",
+        "after": {
+          "type": "Microsoft.Authorization/roleDefinitions",
+          "properties": {
+            "roleName": "AICA Assessment Job Starter",
+            "type": "CustomRole",
+            "permissions": [
+              {
+                "actions": [
+                  "Microsoft.App/jobs/*"
+                ]
+              }
+            ],
+            "assignableScopes": [
+              "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-aica-control-cc"
+            ]
+          }
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "status": "Succeeded",
+  "properties": {
+    "changes": [
+      {
+        "changeType": "Create",
+        "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/providers/Microsoft.Consumption/budgets/budget-aica-dev",
+        "after": {
+          "type": "Microsoft.Consumption/budgets",
+          "properties": {
+            "amount": 25,
+            "category": "Cost",
+            "timeGrain": "Monthly"
+          }
+        }
+      }
+    ]
+  }
+}

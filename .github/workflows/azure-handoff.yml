@@ -1,0 +1,296 @@
+name: Prepare Azure MCP deployment handoff
+
+on:
+  workflow_dispatch:
+    inputs:
+      parameter_file:
+        description: Parameter file under infra/parameters
+        required: true
+        default: infra/parameters/student.dev.bicepparam
+        type: string
+      quota_evidence_sha256:
+        description: SHA-256 of the exact private MCP quota-evidence JSON; required for model or Phi parameters
+        required: false
+        type: string
+      corpus_receipt_sha256:
+        description: SHA-256 of the exact private corpus receipt; required for workload parameters
+        required: false
+        type: string
+      entra_receipt_sha256:
+        description: SHA-256 of the exact private Entra readback receipt; required for workload parameters
+        required: false
+        type: string
+      supply_chain_run_id:
+        description: Successful supply-chain workflow run containing all exact-commit workload images
+        required: false
+        type: string
+
+permissions:
+  actions: read
+  contents: read
+  id-token: write
+
+jobs:
+  handoff:
+    runs-on: ubuntu-24.04
+    environment: azure-deploy
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+      - name: Authenticate with OIDC for read-only identity/subscription preflight
+        uses: azure/login@532459ea530d8321f2fb9bb10d1e0bcf23869a43
+        with:
+          client-id: ${{ vars.AZURE_DEPLOY_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - name: Confirm selected subscription (read-only)
+        run: az account show --query '{id:id,name:name,state:state}' --output json
+      - name: Install pinned Bicep CLI
+        shell: bash
+        run: |
+          curl --fail --location --silent --show-error --output /tmp/bicep \
+            https://github.com/Azure/bicep/releases/download/v0.45.15/bicep-linux-x64
+          echo 'ff5b194b042c220df4a50d6768ed1d6c39a32894bfdc4ff83d62b115d966a7ce  /tmp/bicep' | sha256sum --check
+          chmod +x /tmp/bicep
+      - name: Materialize protected budget recipient
+        env:
+          PARAMETER_FILE: ${{ inputs.parameter_file }}
+          BUDGET_EMAIL: ${{ secrets.BUDGET_CONTACT_EMAIL }}
+        shell: bash
+        run: |
+          case "$PARAMETER_FILE" in infra/parameters/*.bicepparam) ;; *) exit 64 ;; esac
+          resolved_parameter_file=$(realpath -- "$PARAMETER_FILE")
+          [[ "$(dirname "$resolved_parameter_file")" == "$(realpath infra/parameters)" ]]
+          [[ "$(basename "$resolved_parameter_file")" =~ ^[A-Za-z0-9._-]+\.bicepparam$ ]]
+          [[ "$BUDGET_EMAIL" =~ ^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$ ]]
+          sed -i "s/REPLACE_ME@example.com/${BUDGET_EMAIL}/g" "$resolved_parameter_file"
+      - name: Bind optional private Foundry quota evidence
+        env:
+          EXPECTED_SHA256: ${{ inputs.quota_evidence_sha256 }}
+          QUOTA_EVIDENCE_B64: ${{ secrets.AICA_FOUNDRY_QUOTA_EVIDENCE_B64 }}
+        shell: bash
+        run: |
+          printf '%s\n' '{}' > /tmp/private-evidence-bindings.json
+          if [[ -z "$EXPECTED_SHA256" ]]; then
+            exit 0
+          fi
+
+          [[ "$EXPECTED_SHA256" =~ ^[0-9a-f]{64}$ ]]
+          [[ -n "$QUOTA_EVIDENCE_B64" ]]
+          umask 077
+          printf '%s' "$QUOTA_EVIDENCE_B64" \
+            | base64 --decode > /tmp/aica-foundry-quota-evidence.json
+          jq --exit-status 'type == "object"' \
+            /tmp/aica-foundry-quota-evidence.json >/dev/null
+          actual_sha256=$(sha256sum /tmp/aica-foundry-quota-evidence.json | awk '{print $1}')
+          [[ "$actual_sha256" == "$EXPECTED_SHA256" ]]
+          jq --null-input \
+            --arg foundryQuotaEvidenceSha256 "$actual_sha256" \
+            '{foundryQuotaEvidenceSha256: $foundryQuotaEvidenceSha256}' \
+            > /tmp/private-evidence-bindings.json
+          echo 'AICA_FOUNDRY_QUOTA_EVIDENCE=/tmp/aica-foundry-quota-evidence.json' \
+            >> "$GITHUB_ENV"
+      - name: Bind successful exact-commit supply-chain images
+        env:
+          PARAMETER_FILE: ${{ inputs.parameter_file }}
+          SUPPLY_CHAIN_RUN_ID: ${{ inputs.supply_chain_run_id }}
+          HANDOFF_SOURCE_COMMIT: ${{ github.sha }}
+          GH_API_URL: ${{ github.api_url }}
+          GH_REPOSITORY: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          if ! rg --quiet 'param enableWorkloads = true' "$PARAMETER_FILE"; then
+            [[ -z "$SUPPLY_CHAIN_RUN_ID" ]]
+            exit 0
+          fi
+
+          [[ "$SUPPLY_CHAIN_RUN_ID" =~ ^[1-9][0-9]*$ ]]
+          run_url="${GH_API_URL%/}/repos/${GH_REPOSITORY}/actions/runs/${SUPPLY_CHAIN_RUN_ID}"
+          run_response=$(curl --fail --silent --show-error \
+            --header 'Accept: application/vnd.github+json' \
+            --header "Authorization: Bearer ${GH_TOKEN}" \
+            --header 'X-GitHub-Api-Version: 2026-03-10' \
+            "$run_url")
+          jq --exit-status \
+            --arg run_id "$SUPPLY_CHAIN_RUN_ID" \
+            --arg handoff_commit "$HANDOFF_SOURCE_COMMIT" \
+            '(.id | tostring) == $run_id
+             and ((.path | type) == "string")
+             and (.path == ".github/workflows/supply-chain.yml"
+                  or (.path | startswith(".github/workflows/supply-chain.yml@")))
+             and (.head_sha | type) == "string"
+             and (.head_sha | test("^[0-9a-f]{40}$"))
+             and .head_sha == $handoff_commit
+             and .status == "completed"
+             and .conclusion == "success"' \
+            <<< "$run_response" >/dev/null
+          source_commit=$(jq --raw-output '.head_sha' <<< "$run_response")
+
+          artifacts_response=$(curl --fail --silent --show-error \
+            --header 'Accept: application/vnd.github+json' \
+            --header "Authorization: Bearer ${GH_TOKEN}" \
+            --header 'X-GitHub-Api-Version: 2026-03-10' \
+            "${run_url}/artifacts?per_page=100")
+          jq --exit-status \
+            '(.total_count | type) == "number"
+             and (.artifacts | type) == "array"
+             and .total_count == (.artifacts | length)' \
+            <<< "$artifacts_response" >/dev/null
+
+          records_root=$(mktemp --directory /tmp/aica-supply-chain-records.XXXXXX)
+          for component in api job apps-console apps-policy-assistant; do
+            artifact_name="sbom-${component}-${source_commit}"
+            artifact_count=$(jq \
+              --arg name "$artifact_name" \
+              '[.artifacts[] | select(.name == $name and .expired == false)] | length' \
+              <<< "$artifacts_response")
+            [[ "$artifact_count" == "1" ]]
+            artifact=$(jq --compact-output \
+              --arg name "$artifact_name" \
+              '.artifacts[] | select(.name == $name and .expired == false)' \
+              <<< "$artifacts_response")
+            jq --exit-status \
+              '(.id | type) == "number"
+               and (.archive_download_url | type) == "string"
+               and (.archive_download_url | startswith("https://"))
+               and (.digest | type) == "string"
+               and (.digest | test("^sha256:[0-9a-f]{64}$"))' \
+              <<< "$artifact" >/dev/null
+
+            archive="${records_root}/${component}.zip"
+            curl --fail --location --silent --show-error \
+              --header 'Accept: application/vnd.github+json' \
+              --header "Authorization: Bearer ${GH_TOKEN}" \
+              --header 'X-GitHub-Api-Version: 2026-03-10' \
+              --output "$archive" \
+              "$(jq --raw-output '.archive_download_url' <<< "$artifact")"
+            expected_archive_digest=$(jq --raw-output '.digest' <<< "$artifact")
+            actual_archive_digest="sha256:$(sha256sum "$archive" | awk '{print $1}')"
+            [[ "$actual_archive_digest" == "$expected_archive_digest" ]]
+            mapfile -t archive_entries < <(unzip -Z1 "$archive")
+            [[ "${#archive_entries[@]}" == "2" ]]
+            expected_entries=$(printf '%s\n' \
+              "image-${component}.json" \
+              "sbom-${component}.spdx.json" | LC_ALL=C sort)
+            actual_entries=$(printf '%s\n' "${archive_entries[@]}" | LC_ALL=C sort)
+            [[ "$actual_entries" == "$expected_entries" ]]
+            mkdir "${records_root}/${component}"
+            unzip -q "$archive" -d "${records_root}/${component}"
+          done
+
+          image_set_sha256=$(python3 scripts/azure/prepare-image-handoff.py prepare \
+            "$PARAMETER_FILE" \
+            "$records_root" \
+            --source-commit "$source_commit" \
+            --workflow-run-id "$SUPPLY_CHAIN_RUN_ID" \
+            --output /tmp/supply-chain-image-set.json \
+            | sed -n 's/^Supply-chain image set prepared: //p')
+          [[ "$image_set_sha256" =~ ^[0-9a-f]{64}$ ]]
+          jq \
+            --arg supplyChainImageSetSha256 "$image_set_sha256" \
+            '. + {supplyChainImageSetSha256: $supplyChainImageSetSha256}' \
+            /tmp/private-evidence-bindings.json \
+            > /tmp/private-evidence-bindings.updated.json
+          mv /tmp/private-evidence-bindings.updated.json /tmp/private-evidence-bindings.json
+          echo 'AICA_SUPPLY_CHAIN_IMAGE_SET=/tmp/supply-chain-image-set.json' \
+            >> "$GITHUB_ENV"
+      - name: Bind protected workload corpus receipt
+        env:
+          PARAMETER_FILE: ${{ inputs.parameter_file }}
+          EXPECTED_SHA256: ${{ inputs.corpus_receipt_sha256 }}
+          CORPUS_RECEIPT_B64: ${{ secrets.AICA_CORPUS_MATERIALIZATION_RECEIPT_B64 }}
+        shell: bash
+        run: |
+          if ! rg --quiet 'param enableWorkloads = true' "$PARAMETER_FILE"; then
+            [[ -z "$EXPECTED_SHA256" ]]
+            exit 0
+          fi
+
+          [[ "$EXPECTED_SHA256" =~ ^[0-9a-f]{64}$ ]]
+          [[ -n "$CORPUS_RECEIPT_B64" ]]
+          umask 077
+          printf '%s' "$CORPUS_RECEIPT_B64" \
+            | base64 --decode > /tmp/aica-corpus-materialization-receipt.json
+          jq --exit-status 'type == "object"' \
+            /tmp/aica-corpus-materialization-receipt.json >/dev/null
+          actual_sha256=$(sha256sum /tmp/aica-corpus-materialization-receipt.json | awk '{print $1}')
+          [[ "$actual_sha256" == "$EXPECTED_SHA256" ]]
+          jq \
+            --arg corpusMaterializationReceiptSha256 "$actual_sha256" \
+            '. + {corpusMaterializationReceiptSha256: $corpusMaterializationReceiptSha256}' \
+            /tmp/private-evidence-bindings.json \
+            > /tmp/private-evidence-bindings.updated.json
+          mv /tmp/private-evidence-bindings.updated.json /tmp/private-evidence-bindings.json
+          echo 'AICA_CORPUS_MATERIALIZATION_RECEIPT=/tmp/aica-corpus-materialization-receipt.json' \
+            >> "$GITHUB_ENV"
+      - name: Bind protected Entra application readback receipt
+        env:
+          PARAMETER_FILE: ${{ inputs.parameter_file }}
+          EXPECTED_SHA256: ${{ inputs.entra_receipt_sha256 }}
+          ENTRA_RECEIPT_B64: ${{ secrets.AICA_ENTRA_MATERIALIZATION_RECEIPT_B64 }}
+        shell: bash
+        run: |
+          if ! rg --quiet 'param enableWorkloads = true' "$PARAMETER_FILE"; then
+            [[ -z "$EXPECTED_SHA256" ]]
+            exit 0
+          fi
+
+          [[ "$EXPECTED_SHA256" =~ ^[0-9a-f]{64}$ ]]
+          [[ -n "$ENTRA_RECEIPT_B64" ]]
+          umask 077
+          printf '%s' "$ENTRA_RECEIPT_B64" \
+            | base64 --decode > /tmp/aica-entra-materialization-receipt.json
+          jq --exit-status 'type == "object"' \
+            /tmp/aica-entra-materialization-receipt.json >/dev/null
+          actual_sha256=$(sha256sum /tmp/aica-entra-materialization-receipt.json | awk '{print $1}')
+          [[ "$actual_sha256" == "$EXPECTED_SHA256" ]]
+          jq \
+            --arg entraMaterializationReceiptSha256 "$actual_sha256" \
+            '. + {entraMaterializationReceiptSha256: $entraMaterializationReceiptSha256}' \
+            /tmp/private-evidence-bindings.json \
+            > /tmp/private-evidence-bindings.updated.json
+          mv /tmp/private-evidence-bindings.updated.json /tmp/private-evidence-bindings.json
+          echo 'AICA_ENTRA_MATERIALIZATION_RECEIPT=/tmp/aica-entra-materialization-receipt.json' \
+            >> "$GITHUB_ENV"
+      - name: Compile immutable MCP handoff artifacts
+        env:
+          PARAMETER_FILE: ${{ inputs.parameter_file }}
+          BICEP_BIN: /tmp/bicep
+          AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+          AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+          AICA_PSEUDONYMIZATION_SECRET: ${{ secrets.AICA_PSEUDONYMIZATION_SECRET }}
+          AICA_GITHUB_APP_PRIVATE_KEY: ${{ secrets.AICA_GITHUB_APP_PRIVATE_KEY }}
+        shell: bash
+        run: |
+          scripts/azure/preflight.sh "$PARAMETER_FILE"
+          /tmp/bicep build infra/main.bicep --outfile /tmp/aica-main.json
+          /tmp/bicep build-params "$PARAMETER_FILE" --outfile /tmp/aica-parameters.json
+          sha256sum \
+            /tmp/aica-main.json \
+            /tmp/aica-parameters.json \
+            /tmp/private-evidence-bindings.json \
+            > /tmp/SHA256SUMS
+          if [[ -f /tmp/supply-chain-image-set.json ]]; then
+            sha256sum /tmp/supply-chain-image-set.json >> /tmp/SHA256SUMS
+          fi
+          printf '%s\n' \
+            'No deployment was performed. Submit these exact artifacts to Azure MCP What-If.' \
+            'private-evidence-bindings.json binds separately retained quota, corpus, and Entra readback evidence plus the normalized supply-chain image set by SHA-256 when required.' \
+            'supply-chain-image-set.json records the exact signed, attested, single-commit images compiled into workload parameters; it contains no private evidence.' \
+            'If enableWorkloads=true, supply pseudonymizationSecret and githubAppPrivateKey separately as secure MCP parameters.' \
+            'Private evidence and secure values are intentionally absent from every uploaded handoff artifact.' > /tmp/README.txt
+      - name: Upload MCP handoff
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: azure-mcp-handoff-${{ github.run_id }}
+          path: |
+            /tmp/aica-main.json
+            /tmp/aica-parameters.json
+            /tmp/private-evidence-bindings.json
+            /tmp/supply-chain-image-set.json
+            /tmp/SHA256SUMS
+            /tmp/README.txt
+          if-no-files-found: error
+          retention-days: 7

@@ -1,0 +1,29 @@
+{
+  "component-definition": {
+    "uuid":"10000000-0000-4000-8000-000000000003",
+    "metadata":{"title":"Policy Assistant Component Definition","published":"2026-05-15T12:00:00Z","last-modified":"2026-05-15T12:00:00Z","version":"1.0.0","oscal-version":"1.2.2","props":[{"name":"marking","value":"PUBLIC-SANITIZED"}]},
+    "components":[{
+      "uuid":"20000000-0000-4000-8000-000000000001",
+      "type":"software",
+      "title":"Internal Policy Assistant",
+      "description":"Minimal Entra-authenticated retrieval assistant over a synthetic policy corpus with one read-only tool and one confirmation-gated harmless consequential tool.",
+      "purpose":"Provide a realistic but low-risk system under assurance.",
+      "props":[{"name":"implementation-point","value":"internal"},{"name":"asset-type","value":"application"}],
+      "control-implementations":[{
+        "uuid":"21000000-0000-4000-8000-000000000001",
+        "source":"./aica-profile.json",
+        "description":"Capabilities implemented by the policy assistant application and its deployment configuration.",
+        "implemented-requirements":[
+          {"uuid":"22000000-0000-4000-8000-000000000001","control-id":"ac-3","description":"Entra authentication protects the private interface; the API independently authorizes every command."},
+          {"uuid":"22000000-0000-4000-8000-000000000002","control-id":"ia-2","description":"Interactive access uses Entra identities; no local application passwords are supported."},
+          {"uuid":"22000000-0000-4000-8000-000000000003","control-id":"au-12","description":"Structured telemetry records correlation ID, pseudonymous actor, status, retrieval IDs, and tool decision without routine prompt or response content."},
+          {"uuid":"22000000-0000-4000-8000-000000000004","control-id":"sc-8","description":"Azure-managed ingress enforces encrypted transport and the application rejects insecure upstream configuration."},
+          {"uuid":"22000000-0000-4000-8000-000000000005","control-id":"ai-dp-01","description":"SQLite FTS5 retrieval uses only manifest-listed synthetic documents; retrieved text is treated as untrusted data."},
+          {"uuid":"22000000-0000-4000-8000-000000000006","control-id":"ai-ac-01","description":"The access-exception tool validates authorization and a server-held confirmation token before creating a synthetic request."},
+          {"uuid":"22000000-0000-4000-8000-000000000007","control-id":"ai-te-01","description":"A configuration digest and passing fixed evaluation artifact are required by the deployment gate."},
+          {"uuid":"22000000-0000-4000-8000-000000000008","control-id":"ai-mo-01","description":"Guardrail, retrieval, tool, model, and configuration events are emitted for content-minimized monitoring."}
+        ]
+      }]
+    }]
+  }
+}

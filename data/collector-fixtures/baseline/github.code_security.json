@@ -1,0 +1,4 @@
+{
+  "source":"github.code_security","query":"repository security configuration, dependency and image scan projection","classification":"PUBLIC_SANITIZED","captured_at":"2026-06-01T11:58:30Z",
+  "payload":{"nodes":[{"repository":"azure-ai-continuous-assurance","advanced_security":{"status":"enabled"},"secret_scanning":{"status":"enabled","push_protection":"enabled"},"dependency_graph":{"status":"enabled"},"unresolved_critical_alerts":0,"workflow_image":"ghcr.io/example/aica-job@sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"}]}
+}
