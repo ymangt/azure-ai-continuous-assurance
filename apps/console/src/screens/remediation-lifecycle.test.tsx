@@ -22,7 +22,7 @@ describe('remediation lifecycle command', () => {
     render(<FindingsScreen data={snapshot} publicMode={false} onNavigate={() => undefined} onCommand={() => undefined} />);
     await user.click(screen.getByRole('button', { name: /FND-005/ }));
     await user.click(screen.getByRole('button', { name: 'Mark ready for retest' }));
-    const dialog = screen.getByRole('dialog');
+    const dialog = await screen.findByRole('dialog');
     fireEvent.change(within(dialog).getByLabelText(/Remediation owner/), { target: { value: 'Cloud Owner' } });
     fireEvent.change(within(dialog).getByLabelText(/Remediation action/), { target: { value: 'Remove the broad ingress rule through reviewed infrastructure code.' } });
     fireEvent.change(within(dialog).getByLabelText(/Commit or pull request/), { target: { value: 'PR-101' } });
