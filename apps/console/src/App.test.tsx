@@ -30,6 +30,47 @@ describe('Assurance Console', () => {
     expect(await screen.findByRole('complementary', { name: /EVD-R-008 details/ })).toBeInTheDocument();
   });
 
+  it('opens a control criteria preview from the overview trace before navigating', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByRole('heading', { name: 'Assurance overview' });
+
+    await user.click(screen.getByRole('button', { name: /Control criteria/i }));
+    expect(await screen.findByRole('heading', { name: 'Control criteria preview' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Assurance overview' })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Open full control' }));
+    expect(await screen.findByRole('heading', { name: 'Controls' })).toBeInTheDocument();
+    expect(await screen.findByRole('complementary', { name: /SC-7\.1 details/ })).toBeInTheDocument();
+  });
+
+  it('opens metric and finding previews from the overview before navigating', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByRole('heading', { name: 'Assurance overview' });
+
+    await user.click(screen.getByRole('button', { name: /Test coverage/i }));
+    expect(await screen.findByRole('heading', { name: 'Test coverage preview' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Stay on overview' }));
+    expect(screen.queryByRole('heading', { name: 'Test coverage preview' })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /FND-001 · FND-001/i }));
+    expect(await screen.findByRole('heading', { name: 'Finding preview' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Open finding' }));
+    expect(await screen.findByRole('heading', { name: 'Findings & risks' })).toBeInTheDocument();
+  });
+
+  it('opens an evidence preview from the criteria-to-retest chain', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByRole('heading', { name: 'Assurance overview' });
+
+    await user.click(screen.getByRole('button', { name: /Evidence SHA-256/i }));
+    expect(await screen.findByRole('heading', { name: 'Evidence preview' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Open evidence' }));
+    expect(await screen.findByRole('heading', { name: 'Evidence' })).toBeInTheDocument();
+  });
+
   it('removes all mutating actions from public mode', async () => {
     window.history.replaceState(null, '', '/?mode=public');
     render(<App />);
