@@ -26,6 +26,13 @@ git log -5 --oneline --decorate
   as an AI session log.
 - Use Git commits and the current task prompt as the handoff record; do not create a persistent
   AI session log.
+- For `apps/console` UI work, read `PRODUCT.md` and `DESIGN.md` first and follow
+  `.cursor/rules/design.mdc`. Prefer Fluent UI + existing tokens over new visual systems.
+- Skill payloads under `.cursor/skills/` and `.agents/skills/` are gitignored. Reinstall
+  locally with:
+  `npx skills add anthropics/skills --skill frontend-design -y`
+  `npx skills add Leonxlnx/taste-skill --skill design-taste-frontend -y`
+  `npx impeccable@latest install --providers=cursor --scope=project`
 
 ## Before Handoff
 

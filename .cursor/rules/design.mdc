@@ -1,0 +1,18 @@
+---
+description: Assurance Console design system — Fluent UI + DESIGN.md
+globs: apps/console/**/*.{tsx,ts,css}
+alwaysApply: false
+---
+
+# Console UI design rules
+
+Before writing or changing UI in `apps/console`:
+
+1. Read `DESIGN.md` and `PRODUCT.md` at the repo root.
+2. Stay in the **product** register: workbench clarity over marketing novelty.
+3. Use **Fluent UI React v9** and existing components (`SectionCard`, `MetricCard`, `StatusBadge`, `ActionDialog`, `OverviewPreviewDialog`, `DetailPanel`).
+4. Reuse CSS variables from `apps/console/src/styles.css` (`--navy-*`, `--azure-*`, `--ink`, `--muted`, semantic success/warning/danger).
+5. Do **not** introduce shadcn, Tailwind utility stacks, purple gradients, Inter-as-brand, or neon cyber aesthetics unless the user explicitly requests a redesign.
+6. Motion stays short (≈150–250ms) and respects `prefers-reduced-motion`.
+7. Overview deep-links should prefer preview dialogs before navigation when the pattern already exists.
+8. Never invent assurance verdicts or certification claims in UI copy.

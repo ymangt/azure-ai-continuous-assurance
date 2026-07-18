@@ -26,3 +26,10 @@ artifacts/work/
 *.pem
 *.key
 *.pfx
+
+# Local agent skill payloads (reinstall; do not vendor in git)
+.agents/
+.cursor/skills/
+.cursor/hooks.json
+.impeccable/
+skills-lock.json
