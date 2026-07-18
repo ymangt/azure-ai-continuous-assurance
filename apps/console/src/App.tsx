@@ -98,25 +98,27 @@ export function App() {
   };
 
   return (
-    <FluentProvider theme={webLightTheme} className="provider-root">
-      <AppShell
-        view={view}
-        publicMode={publicMode}
-        activeRun={snapshot.data?.selectedRun}
-        stale={demoState === 'stale'}
-        commandMessage={commandMessage}
-        onNavigate={navigate}
-        onQueueAssessment={() => setQueueOpen(true)}
-      >
-        <Suspense fallback={<DataStatePanel state="loading" />}>{renderScreen()}</Suspense>
-      </AppShell>
+    <FluentProvider theme={webLightTheme}>
+      <div className="provider-root">
+        <AppShell
+          view={view}
+          publicMode={publicMode}
+          activeRun={snapshot.data?.selectedRun}
+          stale={demoState === 'stale'}
+          commandMessage={commandMessage}
+          onNavigate={navigate}
+          onQueueAssessment={() => setQueueOpen(true)}
+        >
+          <Suspense fallback={<DataStatePanel state="loading" />}>{renderScreen()}</Suspense>
+        </AppShell>
 
-      {!publicMode ? (
-        <ActionDialog open={queueOpen} title="Queue an assessment" description="This records a request for the independent collector/evaluator job. The browser does not collect evidence or determine a verdict." confirmLabel="Queue assessment" pending={pending} onClose={() => setQueueOpen(false)} onConfirm={() => void queueAssessment()}>
-          <Field label="Approved scope"><Select value={scope} onChange={(_, value) => setScope(value.value)}><option value="full-approved-scope">Full approved scope</option><option value="policy-assistant">Policy Assistant only</option><option value="assurance-plane">Assurance plane only</option></Select></Field>
-          <div className="dialog-summary"><Text size={200}>Trigger</Text><strong>Manual</strong><Text size={200}>Expected behavior</Text><strong>Collect → normalize → evaluate → assess → sign</strong><Text size={200}>Estimated ceiling</Text><strong>CAD $0.50</strong></div>
-        </ActionDialog>
-      ) : null}
+        {!publicMode ? (
+          <ActionDialog open={queueOpen} title="Queue an assessment" description="This records a request for the independent collector/evaluator job. The browser does not collect evidence or determine a verdict." confirmLabel="Queue assessment" pending={pending} onClose={() => setQueueOpen(false)} onConfirm={() => void queueAssessment()}>
+            <Field label="Approved scope"><Select value={scope} onChange={(_, value) => setScope(value.value)}><option value="full-approved-scope">Full approved scope</option><option value="policy-assistant">Policy Assistant only</option><option value="assurance-plane">Assurance plane only</option></Select></Field>
+            <div className="dialog-summary"><Text size={200}>Trigger</Text><strong>Manual</strong><Text size={200}>Expected behavior</Text><strong>Collect → normalize → evaluate → assess → sign</strong><Text size={200}>Estimated ceiling</Text><strong>CAD $0.50</strong></div>
+          </ActionDialog>
+        ) : null}
+      </div>
     </FluentProvider>
   );
 }

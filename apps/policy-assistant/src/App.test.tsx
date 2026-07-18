@@ -20,6 +20,7 @@ describe('Policy Assistant', () => {
     expect(screen.getByText('corr-814f93e1')).toBeInTheDocument();
     expect(screen.getByText('eval-GRD-003')).toBeInTheDocument();
     expect(screen.getByText(/read-only trusted metadata/i)).toBeInTheDocument();
+    expect(document.querySelector('.assistant-provider')).not.toHaveClass('fui-FluentProvider');
   });
 
   it('does not execute the consequential tool before proposal-specific confirmation', async () => {

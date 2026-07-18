@@ -13,6 +13,7 @@ describe('Assurance Console', () => {
     expect(screen.getByText('Internal readiness assessment — not certification')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Queue assessment/i })).toBeInTheDocument();
     expect(screen.getByText('Criteria-to-retest trace')).toBeInTheDocument();
+    expect(document.querySelector('.provider-root')).not.toHaveClass('fui-FluentProvider');
   });
 
   it('navigates from controls to linked evidence in two interactions', async () => {

@@ -111,8 +111,8 @@ export function App() {
 
   const stale = uiState === 'stale';
   return (
-    <FluentProvider theme={webLightTheme} className="assistant-provider">
-      <div className="assistant-app">
+    <FluentProvider theme={webLightTheme}>
+      <div className="assistant-provider assistant-app">
         <header className="assistant-header">
           <div className="assistant-brand"><span><ShieldLock24Regular /></span><div><strong>Internal Policy Assistant</strong><Text size={200}>Synthetic policy fixture</Text></div></div>
           <div className="header-runtime"><span className="runtime-dot"><Circle20Regular /></span><div><Text weight="semibold">{replayMode ? 'Deterministic replay' : 'Azure-hosted inference'}</Text><Text size={100}>{replayMode ? 'No model call · demo evidence' : 'Managed identity · grounded retrieval'}</Text></div></div>
