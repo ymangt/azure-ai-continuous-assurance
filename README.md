@@ -183,7 +183,7 @@ Honest claim until then:
 - [Assurance artifact index](assurance/ARTIFACT_INDEX.md)
 - [AI usage disclosure](AI_USAGE.md)
 - [Azure infrastructure](infra/README.md)
-- [GitHub environments and trust setup](.github/README.md)
+- [GitHub environments and trust setup](docs/operations/github-trust-and-environments.md)
 
 ## License
 
