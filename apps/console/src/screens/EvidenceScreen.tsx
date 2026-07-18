@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Button, Field, Input, Select, Text } from '@fluentui/react-components';
 import { CheckmarkCircle20Regular, Clipboard20Regular, DocumentData20Regular, Search20Regular } from '@fluentui/react-icons';
 import { formatDateTime, shortHash } from '../format';
-import type { AppView, ConsoleSnapshot, EvidenceItem } from '../types';
+import type { AppView, CommandFeedbackInput, ConsoleSnapshot, EvidenceItem } from '../types';
 import { DetailPanel } from '../components/DetailPanel';
 import { PageHeader } from '../components/PageHeader';
 import { StatusBadge } from '../components/StatusBadge';
@@ -12,7 +12,7 @@ interface EvidenceScreenProps {
   publicMode: boolean;
   focusId?: string;
   onNavigate: (view: AppView, id?: string) => void;
-  onCommand: (message: string) => void;
+  onCommand: (feedback: CommandFeedbackInput) => void;
 }
 
 export function EvidenceScreen({ data, publicMode, focusId, onNavigate, onCommand }: EvidenceScreenProps) {
@@ -22,7 +22,7 @@ export function EvidenceScreen({ data, publicMode, focusId, onNavigate, onComman
   const [selected, setSelected] = useState<EvidenceItem>();
 
   useEffect(() => {
-    if (focusId) setSelected(data.evidence.find((item) => item.id === focusId));
+    setSelected(focusId ? data.evidence.find((item) => item.id === focusId) : undefined);
   }, [data.evidence, focusId]);
 
   const sources = [...new Set(data.evidence.map((item) => item.source))];
@@ -34,10 +34,11 @@ export function EvidenceScreen({ data, publicMode, focusId, onNavigate, onComman
 
   const copyHash = async (hash: string) => {
     try {
-      await navigator.clipboard?.writeText(hash);
-      onCommand('Evidence hash copied. Verify it against the signed run manifest, not the UI alone.');
+      if (!navigator.clipboard) throw new Error('Clipboard API unavailable');
+      await navigator.clipboard.writeText(hash);
+      onCommand({ intent: 'success', message: 'Evidence hash copied. Verify it against the signed run manifest, not the UI alone.' });
     } catch {
-      onCommand('Clipboard access was denied. Select the hash in the evidence metadata to copy it manually.');
+      onCommand({ intent: 'error', message: 'Clipboard access was denied. Select the hash in the evidence metadata to copy it manually.' });
     }
   };
 
@@ -59,20 +60,20 @@ export function EvidenceScreen({ data, publicMode, focusId, onNavigate, onComman
 
       <div className={`master-detail ${selected ? 'detail-open' : ''}`}>
         <section className="table-card" aria-label="Evidence items">
-          <div className="table-scroll">
-            <table className="data-table evidence-table">
+          <div className="table-scroll" tabIndex={0} aria-label="Scrollable evidence items table">
+            <table className="data-table evidence-table responsive-record-table">
               <thead><tr><th>Evidence</th><th>Source / method</th><th>Captured</th><th>Scope</th><th>Classification</th><th>Redaction</th><th>Hash</th><th>Controls</th></tr></thead>
               <tbody>
                 {filtered.map((item) => (
                   <tr key={item.id} className={selected?.id === item.id ? 'selected-row' : undefined}>
-                    <td><button type="button" className="table-primary-link" onClick={() => setSelected(item)}><strong>{item.id}</strong><span>{item.summary}</span></button></td>
-                    <td><strong>{item.source}</strong><span className="cell-secondary">{item.method} · {item.collectorVersion}</span></td>
-                    <td>{formatDateTime(item.capturedAt)}<span className="cell-secondary"><StatusBadge value={item.freshness} subtle /></span></td>
-                    <td>{item.resourceScope}</td>
-                    <td><StatusBadge value={item.sensitivity} subtle /></td>
-                    <td><StatusBadge value={item.redaction} subtle /></td>
-                    <td><code>{shortHash(item.hash)}</code></td>
-                    <td>{item.controlIds.map((id) => <button className="inline-link" type="button" key={id} onClick={() => onNavigate('controls', id)}>{id}</button>)}</td>
+                    <td data-label="Evidence"><button type="button" className="table-primary-link" onClick={() => { setSelected(item); onNavigate('evidence', item.id); }}><strong>{item.id}</strong><span>{item.summary}</span></button></td>
+                    <td data-label="Source / method"><strong>{item.source}</strong><span className="cell-secondary">{item.method} · {item.collectorVersion}</span></td>
+                    <td data-label="Captured">{formatDateTime(item.capturedAt)}<span className="cell-secondary"><StatusBadge value={item.freshness} subtle /></span></td>
+                    <td data-label="Scope">{item.resourceScope}</td>
+                    <td data-label="Classification"><StatusBadge value={item.sensitivity} subtle /></td>
+                    <td data-label="Redaction"><StatusBadge value={item.redaction} subtle /></td>
+                    <td data-label="Hash"><code>{shortHash(item.hash)}</code></td>
+                    <td data-label="Controls">{item.controlIds.map((id) => <button className="inline-link" type="button" key={id} onClick={() => onNavigate('controls', id)}>{id}</button>)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -82,7 +83,7 @@ export function EvidenceScreen({ data, publicMode, focusId, onNavigate, onComman
         </section>
 
         {selected ? (
-          <DetailPanel title={selected.id} subtitle={`${selected.source} · ${selected.mediaType}`} onClose={() => setSelected(undefined)} actions={<Button appearance="secondary" icon={<Clipboard20Regular />} onClick={() => void copyHash(selected.hash)}>Copy SHA-256</Button>}>
+          <DetailPanel title={selected.id} subtitle={`${selected.source} · ${selected.mediaType}`} onClose={() => { setSelected(undefined); onNavigate('evidence'); }} actions={<Button appearance="secondary" icon={<Clipboard20Regular />} onClick={() => void copyHash(selected.hash)}>Copy SHA-256</Button>}>
             <div className="detail-status-row"><StatusBadge value={selected.freshness} /><StatusBadge value={selected.sensitivity} subtle /><StatusBadge value={selected.redaction} subtle /></div>
             <section className="workpaper-section"><Text weight="semibold">Sanitized summary</Text><p>{selected.summary}</p></section>
             <dl className="metadata-list">

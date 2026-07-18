@@ -3,7 +3,7 @@ import { Button, Field, Input, Select, Text, Textarea } from '@fluentui/react-co
 import { CalendarClock20Regular, CheckmarkCircle20Regular, History20Regular, Search20Regular } from '@fluentui/react-icons';
 import { assuranceApi } from '../api/client';
 import { formatDate, scoreBand } from '../format';
-import type { AppView, ConsoleSnapshot, Finding } from '../types';
+import type { AppView, CommandFeedbackInput, ConsoleSnapshot, Finding } from '../types';
 import { ActionDialog } from '../components/ActionDialog';
 import { DetailPanel } from '../components/DetailPanel';
 import { PageHeader } from '../components/PageHeader';
@@ -14,7 +14,7 @@ interface FindingsScreenProps {
   publicMode: boolean;
   focusId?: string;
   onNavigate: (view: AppView, id?: string) => void;
-  onCommand: (message: string) => void;
+  onCommand: (feedback: CommandFeedbackInput) => void;
 }
 
 type DialogMode = 'none' | 'retest' | 'exception' | 'ready' | 'disposition';
@@ -50,7 +50,7 @@ export function FindingsScreen({ data, publicMode, focusId, onNavigate, onComman
     if (focusId) {
       setSelected(data.findings.find((finding) => finding.id === focusId));
       setTab('findings');
-    }
+    } else setSelected(undefined);
   }, [data.findings, focusId]);
 
   const filtered = useMemo(() => data.findings.filter((finding) => {
@@ -81,7 +81,7 @@ export function FindingsScreen({ data, publicMode, focusId, onNavigate, onComman
     try {
       if (dialog === 'retest') {
         const receipt = await assuranceApi.queueRetest(selected.id, data.selectedRun.id);
-        onCommand(`Retest ${receipt.request_id.slice(0, 8)} queued. Closure still requires new evidence and a reviewer decision.`);
+        onCommand({ intent: 'success', message: `Retest ${receipt.request_id.slice(0, 8)} queued. Closure still requires new evidence and a reviewer decision.` });
       } else if (dialog === 'ready') {
         const receipt = await assuranceApi.createRemediation({
           finding_id: selected.id,
@@ -93,19 +93,19 @@ export function FindingsScreen({ data, publicMode, focusId, onNavigate, onComman
           evidence_refs: remediationEvidenceIds,
           expected_version: selected.reviewVersion ?? 1,
         });
-        onCommand(`Remediation readiness accepted as command ${receipt.request_id.slice(0, 8)}. No finding was closed.`);
+        onCommand({ intent: 'success', message: `Remediation readiness recorded as command ${receipt.request_id.slice(0, 8)}. No finding was closed.` });
       } else if (dialog === 'disposition' && latestRetest) {
         const receipt = await assuranceApi.recordDecision({ subject_type: 'finding', subject_id: selected.id, artifact_run_id: data.selectedRun.id, prior_state: selected.status, decision: latestRetest.decision, rationale: rationale.trim(), expected_version: selected.reviewVersion ?? 1 });
-        onCommand(`Retest recommendation ${receipt.request_id.slice(0, 8)} recorded for reviewer disposition. The signed retest remains immutable.`);
+        onCommand({ intent: 'success', message: `Retest recommendation ${receipt.request_id.slice(0, 8)} recorded for reviewer disposition. The signed retest remains immutable.` });
       } else if (dialog === 'exception') {
         const receipt = await assuranceApi.createException({ finding_id: selected.id, artifact_run_id: data.selectedRun.id, rationale: rationale.trim(), compensating_control: compensatingControl.trim(), expires_at: expiresAt, expected_version: selected.reviewVersion ?? 1 });
-        onCommand(`Time-bounded exception command ${receipt.request_id.slice(0, 8)} accepted. The failed test and observation remain unchanged.`);
+        onCommand({ intent: 'success', message: `Time-bounded exception ${receipt.request_id.slice(0, 8)} recorded. The failed test and observation remain unchanged.` });
       }
       setDialog('none');
       setRationale('');
       setCompensatingControl('');
     } catch (error) {
-      onCommand(error instanceof Error ? `Command failed: ${error.message}` : 'The assurance command could not be recorded.');
+      onCommand({ intent: 'error', message: error instanceof Error ? error.message : 'The assurance command could not be recorded.' });
     } finally {
       setPending(false);
     }
@@ -140,18 +140,18 @@ export function FindingsScreen({ data, publicMode, focusId, onNavigate, onComman
 
           <div className={`master-detail ${selected ? 'detail-open' : ''}`}>
             <section className="table-card" aria-label="Findings">
-              <div className="table-scroll">
-                <table className="data-table">
+              <div className="table-scroll" tabIndex={0} aria-label="Scrollable findings table">
+                <table className="data-table responsive-record-table">
                   <thead><tr><th>Finding</th><th>Status</th><th>Severity</th><th>Affected control</th><th>Treatment</th><th>Owner</th><th>Target date</th><th>Retest</th></tr></thead>
                   <tbody>
                     {filtered.map((finding) => (
                       <tr key={finding.id} className={selected?.id === finding.id ? 'selected-row' : undefined}>
-                        <td><button type="button" className="table-primary-link" onClick={() => setSelected(finding)}><strong>{finding.id}</strong><span>{finding.title}</span></button></td>
-                        <td><StatusBadge value={finding.status} subtle /></td>
-                        <td><StatusBadge value={finding.severity} /></td>
-                        <td>{finding.controlIds.map((id) => <button type="button" className="inline-link" key={id} onClick={() => onNavigate('controls', id)}>{id}</button>)}</td>
-                        <td>{finding.treatment}</td><td>{finding.owner}</td><td>{formatDate(finding.targetDate)}</td>
-                        <td>{finding.retests.length ? <span className="evidence-count"><CheckmarkCircle20Regular /> {finding.retests.at(-1)?.result}</span> : 'Pending'}</td>
+                        <td data-label="Finding"><button type="button" className="table-primary-link" onClick={() => { setSelected(finding); onNavigate('findings', finding.id); }}><strong>{finding.id}</strong><span>{finding.title}</span></button></td>
+                        <td data-label="Status"><StatusBadge value={finding.status} subtle /></td>
+                        <td data-label="Severity"><StatusBadge value={finding.severity} /></td>
+                        <td data-label="Affected control">{finding.controlIds.map((id) => <button type="button" className="inline-link" key={id} onClick={() => onNavigate('controls', id)}>{id}</button>)}</td>
+                        <td data-label="Treatment">{finding.treatment}</td><td data-label="Owner">{finding.owner}</td><td data-label="Target date">{formatDate(finding.targetDate)}</td>
+                        <td data-label="Retest">{finding.retests.length ? <span className="evidence-count"><CheckmarkCircle20Regular /> {finding.retests.at(-1)?.result}</span> : 'Pending'}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -160,7 +160,7 @@ export function FindingsScreen({ data, publicMode, focusId, onNavigate, onComman
             </section>
 
             {selected ? (
-              <DetailPanel title={`${selected.id} · ${selected.title}`} subtitle={`${selected.asset} · opened ${formatDate(selected.openedAt)}`} onClose={() => setSelected(undefined)} actions={!publicMode ? (
+              <DetailPanel title={`${selected.id} · ${selected.title}`} subtitle={`${selected.asset} · opened ${formatDate(selected.openedAt)}`} onClose={() => { setSelected(undefined); onNavigate('findings'); }} actions={!publicMode ? (
                 <div className="panel-button-row">
                   {selected.status === 'OPEN' || selected.status === 'REOPENED' ? <Button appearance="secondary" icon={<CalendarClock20Regular />} onClick={() => setDialog('exception')}>Create exception</Button> : null}
                   {selected.status === 'OPEN' || selected.status === 'REOPENED' ? <Button appearance="primary" onClick={openReadyDialog}>Mark ready for retest</Button> : null}
@@ -187,7 +187,7 @@ export function FindingsScreen({ data, publicMode, focusId, onNavigate, onComman
       ) : (
         <div className="risk-layout">
           <section className="table-card" aria-label="Risk register">
-            <div className="table-scroll"><table className="data-table"><thead><tr><th>Risk</th><th>Cause-event-impact statement</th><th>Inherent</th><th>Residual</th><th>Confidence</th><th>Treatment</th><th>Owner</th></tr></thead><tbody>{data.risks.map((risk) => <tr key={risk.id}><td><strong>{risk.id}</strong><button type="button" className="inline-link block-link" onClick={() => { setTab('findings'); setSelected(data.findings.find((finding) => finding.id === risk.findingId)); }}>{risk.findingId}</button></td><td>{risk.statement}</td><td><StatusBadge value={scoreBand(risk.inherentScore)} /> <strong>{risk.inherentScore}/25</strong></td><td><StatusBadge value={scoreBand(risk.residualScore)} /> <strong>{risk.residualScore}/25</strong></td><td>{risk.confidence}</td><td>{risk.treatment}</td><td>{risk.owner}</td></tr>)}</tbody></table></div>
+            <div className="table-scroll"><table className="data-table"><thead><tr><th>Risk</th><th>Cause-event-impact statement</th><th>Inherent</th><th>Residual</th><th>Confidence</th><th>Treatment</th><th>Owner</th></tr></thead><tbody>{data.risks.map((risk) => <tr key={risk.id}><td><strong>{risk.id}</strong><button type="button" className="inline-link block-link" onClick={() => { const finding = data.findings.find((item) => item.id === risk.findingId); setTab('findings'); setSelected(finding); onNavigate('findings', risk.findingId); }}>{risk.findingId}</button></td><td>{risk.statement}</td><td><StatusBadge value={scoreBand(risk.inherentScore)} /> <strong>{risk.inherentScore}/25</strong></td><td><StatusBadge value={scoreBand(risk.residualScore)} /> <strong>{risk.residualScore}/25</strong></td><td>{risk.confidence}</td><td>{risk.treatment}</td><td>{risk.owner}</td></tr>)}</tbody></table></div>
           </section>
           <aside className="risk-rubric" aria-label="Risk scoring rubric"><Text weight="semibold">5×5 scoring rubric</Text><div><span className="risk-low">1–4 Low</span><span className="risk-moderate">5–9 Moderate</span><span className="risk-high">10–16 High</span><span className="risk-critical">17–25 Critical</span></div><Text size={200}>Residual rating reflects treatment; it never changes the original observation.</Text></aside>
         </div>

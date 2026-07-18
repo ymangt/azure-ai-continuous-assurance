@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Button, ProgressBar, Text } from '@fluentui/react-components';
-import { ArrowRight20Regular, CheckmarkCircle24Regular, Clock24Regular, DocumentData24Regular, ShieldError24Regular } from '@fluentui/react-icons';
-import { formatDateTime, scoreBand, shortHash } from '../format';
+import { Button, Text } from '@fluentui/react-components';
+import { ArrowRight20Regular, CheckmarkCircle24Regular, DocumentData24Regular, ShieldError24Regular } from '@fluentui/react-icons';
+import { formatDateTime, scoreBand } from '../format';
 import type { AppView, ConsoleSnapshot, Finding } from '../types';
 import { MetricCard } from '../components/MetricCard';
 import { OverviewPreviewDialog } from '../components/OverviewPreviewDialog';
@@ -20,7 +20,6 @@ type OverviewPreview =
   | { kind: 'coverage' }
   | { kind: 'evidence' }
   | { kind: 'risks' }
-  | { kind: 'run' }
   | { kind: 'finding'; finding: Finding };
 
 export function OverviewScreen({ data, onNavigate }: OverviewScreenProps) {
@@ -40,13 +39,15 @@ export function OverviewScreen({ data, onNavigate }: OverviewScreenProps) {
   const coverage = data.controls.length ? data.controls.filter((control) => control.result !== 'NOT_RUN').length / data.controls.length : 0;
   const materialRisks = data.risks.filter((risk) => risk.residualScore >= 10).length;
   const openFindings = data.findings.filter((finding) => finding.status === 'OPEN' || finding.status === 'REOPENED' || finding.status === 'READY_FOR_RETEST');
-  const runDuration = data.selectedRun.completedAt
-    ? Math.max(0, new Date(data.selectedRun.completedAt).getTime() - new Date(data.selectedRun.startedAt).getTime())
-    : undefined;
-  const durationLabel = runDuration === undefined
-    ? 'Not recorded'
-    : `${Math.floor(runDuration / 60_000)}m ${Math.floor((runDuration % 60_000) / 1_000)}s`;
   const evidenceSources = [...new Set(data.evidence.map((item) => item.source))].slice(0, 4);
+  const priorityFindings = [...data.findings].sort((left, right) => {
+    const leftOpen = openFindings.some((finding) => finding.id === left.id) ? 1 : 0;
+    const rightOpen = openFindings.some((finding) => finding.id === right.id) ? 1 : 0;
+    if (leftOpen !== rightOpen) return rightOpen - leftOpen;
+    const leftRisk = data.risks.find((risk) => risk.findingId === left.id)?.residualScore ?? 0;
+    const rightRisk = data.risks.find((risk) => risk.findingId === right.id)?.residualScore ?? 0;
+    return rightRisk - leftRisk;
+  }).slice(0, 3);
   const previewFindingRisk = preview?.kind === 'finding'
     ? data.risks.find((item) => item.findingId === preview.finding.id)
     : undefined;
@@ -65,7 +66,6 @@ export function OverviewScreen({ data, onNavigate }: OverviewScreenProps) {
     if (next.kind === 'coverage') onNavigate('controls');
     else if (next.kind === 'evidence') onNavigate('evidence');
     else if (next.kind === 'risks') onNavigate('findings');
-    else if (next.kind === 'run') onNavigate('runs');
     else onNavigate('findings', next.finding.id);
   };
 
@@ -74,9 +74,7 @@ export function OverviewScreen({ data, onNavigate }: OverviewScreenProps) {
     : preview?.kind === 'evidence'
       ? 'Evidence freshness preview'
       : preview?.kind === 'risks'
-        ? 'Material residual risks preview'
-        : preview?.kind === 'run'
-          ? 'Last signed run preview'
+        ? 'Findings requiring action preview'
           : preview?.kind === 'finding'
             ? 'Finding preview'
             : '';
@@ -87,8 +85,6 @@ export function OverviewScreen({ data, onNavigate }: OverviewScreenProps) {
       ? 'Open evidence'
       : preview?.kind === 'risks'
         ? 'Open risk register'
-        : preview?.kind === 'run'
-          ? 'Open assessment runs'
           : 'Open finding';
 
   return (
@@ -105,11 +101,10 @@ export function OverviewScreen({ data, onNavigate }: OverviewScreenProps) {
         <div><strong>Internal readiness assessment — not certification</strong><Text size={200}>Simulated owner, assessor, and approver roles do not constitute independent assurance.</Text></div>
       </div>
 
-      <section className="metric-grid" aria-label="Assessment metrics">
+      <section className="metric-grid metric-grid-prioritized" aria-label="Assessment metrics">
+        <MetricCard label="Findings requiring action" value={openFindings.length} detail={`${materialRisks} material residual risk${materialRisks === 1 ? '' : 's'}`} tone={materialRisks ? 'danger' : openFindings.length ? 'warning' : 'good'} icon={<ShieldError24Regular />} onClick={() => showPreview({ kind: 'risks' })} />
         <MetricCard label="Test coverage" value={`${Math.round(coverage * 100)}%`} detail={`${data.controls.length} tailored objectives in the current snapshot`} tone="good" icon={<CheckmarkCircle24Regular />} onClick={() => showPreview({ kind: 'coverage' })} />
         <MetricCard label="Current evidence" value={`${currentEvidence}/${data.evidence.length}`} detail="Freshness is evaluated independently from result" tone={currentEvidence === data.evidence.length ? 'good' : 'warning'} icon={<DocumentData24Regular />} onClick={() => showPreview({ kind: 'evidence' })} />
-        <MetricCard label="Material residual risks" value={materialRisks} detail={`${openFindings.length} finding${openFindings.length === 1 ? '' : 's'} requiring action`} tone={materialRisks ? 'danger' : 'good'} icon={<ShieldError24Regular />} onClick={() => showPreview({ kind: 'risks' })} />
-        <MetricCard label="Last signed run" value={durationLabel} detail={`${data.selectedRun.trigger} · CAD $${data.selectedRun.estimatedCostCad.toFixed(2)} estimated`} icon={<Clock24Regular />} onClick={() => showPreview({ kind: 'run' })} />
       </section>
 
       <div className="two-column-grid overview-grid">
@@ -142,12 +137,16 @@ export function OverviewScreen({ data, onNavigate }: OverviewScreenProps) {
         </SectionCard> : <SectionCard title="Comparison unavailable" description="A second signed run is required for baseline-to-current change analysis." action={<Button appearance="subtle" onClick={() => onNavigate('runs')}>View run</Button>}><Text>No baseline, zero-change result, or trend has been inferred from this single run.</Text><div className="run-integrity-row"><div><Text size={200}>Manifest signature</Text><StatusBadge value={data.selectedRun.signed ? 'PASS' : 'ERROR'} /></div><div><Text size={200}>Generated</Text><strong>{formatDateTime(data.generatedAt)}</strong></div></div></SectionCard>}
       </div>
 
-      <SectionCard title="Material findings and risks" description="Risk uses the documented 5×5 likelihood × impact rubric." action={<Button appearance="subtle" onClick={() => onNavigate('findings')}>Open risk register <ArrowRight20Regular /></Button>}>
+      <SectionCard title="Criteria-to-retest trace" description="The portfolio’s canonical assurance chain remains navigable in three interactions or fewer.">
+        <TraceChain data={data} onNavigate={onNavigate} />
+      </SectionCard>
+
+      <SectionCard title="Priority findings and risks" description="Actionable findings appear first, followed by the highest residual risk." action={<Button appearance="subtle" onClick={() => onNavigate('findings')}>Open risk register <ArrowRight20Regular /></Button>}>
         <div className="table-scroll">
           <table className="data-table compact-table">
             <thead><tr><th>Finding</th><th>Status</th><th>Residual risk</th><th>Owner</th><th>Target</th></tr></thead>
             <tbody>
-              {data.findings.slice(0, 3).map((finding) => {
+              {priorityFindings.map((finding) => {
                 const risk = data.risks.find((item) => item.findingId === finding.id);
                 return (
                   <tr key={finding.id}>
@@ -162,22 +161,6 @@ export function OverviewScreen({ data, onNavigate }: OverviewScreenProps) {
             </tbody>
           </table>
         </div>
-      </SectionCard>
-
-      <SectionCard title="Evidence freshness" description="Required stale or unavailable evidence forces NOT CONCLUDED, regardless of the prior test result.">
-        <div className="freshness-row">
-          <div className="freshness-progress">
-            <div><Text weight="semibold">Current, sanitized evidence</Text><Text>{currentEvidence} of {data.evidence.length} artifacts</Text></div>
-            <ProgressBar value={data.evidence.length ? currentEvidence / data.evidence.length : 0} thickness="large" />
-          </div>
-          <div className="freshness-source-list">
-            {evidenceSources.map((source) => <span key={source}><CheckmarkCircle24Regular /><Text size={200}>{source}</Text></span>)}
-          </div>
-        </div>
-      </SectionCard>
-
-      <SectionCard title="Criteria-to-retest trace" description="The portfolio’s canonical assurance chain remains navigable in three interactions or fewer.">
-        <TraceChain data={data} onNavigate={onNavigate} />
       </SectionCard>
 
       <OverviewPreviewDialog
@@ -228,12 +211,12 @@ export function OverviewScreen({ data, onNavigate }: OverviewScreenProps) {
           <>
             <div className="overview-preview-header">
               <div>
-                <Text weight="semibold">{materialRisks} material residual risk{materialRisks === 1 ? '' : 's'}</Text>
-                <Text size={200} className="muted">{openFindings.length} finding{openFindings.length === 1 ? '' : 's'} requiring action · residual ≥ 10/25</Text>
+                <Text weight="semibold">{openFindings.length} finding{openFindings.length === 1 ? '' : 's'} requiring action</Text>
+                <Text size={200} className="muted">{materialRisks} material residual risk{materialRisks === 1 ? '' : 's'} · residual ≥ 10/25</Text>
               </div>
             </div>
             <ul className="overview-preview-list">
-              {data.findings.slice(0, 3).map((finding) => {
+              {priorityFindings.map((finding) => {
                 const risk = data.risks.find((item) => item.findingId === finding.id);
                 return (
                   <li key={finding.id}>
@@ -247,28 +230,6 @@ export function OverviewScreen({ data, onNavigate }: OverviewScreenProps) {
               })}
             </ul>
             <Text size={200} className="muted">Open the risk register for residual scoring, treatment, and retest disposition.</Text>
-          </>
-        ) : null}
-
-        {preview?.kind === 'run' ? (
-          <>
-            <div className="overview-preview-header">
-              <div>
-                <Text weight="semibold">{data.selectedRun.label}</Text>
-                <Text size={200} className="muted">{data.selectedRun.shortId} · {data.selectedRun.trigger}</Text>
-              </div>
-              <div className="detail-status-row">
-                <StatusBadge value={data.selectedRun.status} />
-                <StatusBadge value={data.selectedRun.signed ? 'PASS' : 'ERROR'} subtle />
-              </div>
-            </div>
-            <div className="dialog-summary overview-preview-summary">
-              <Text size={200}>Duration</Text><strong>{durationLabel}</strong>
-              <Text size={200}>Estimated cost</Text><strong>CAD ${data.selectedRun.estimatedCostCad.toFixed(2)}</strong>
-              <Text size={200}>Started</Text><strong>{formatDateTime(data.selectedRun.startedAt)}</strong>
-              <Text size={200}>Manifest</Text><strong className="break-code">{data.selectedRun.manifestDigest ? shortHash(data.selectedRun.manifestDigest) : '—'}</strong>
-            </div>
-            <Text size={200} className="muted">Assessment Runs holds comparison, integrity details, and targeted retest actions.</Text>
           </>
         ) : null}
 

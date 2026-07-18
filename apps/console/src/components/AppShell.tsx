@@ -1,9 +1,11 @@
-import { useState, type ReactNode } from 'react';
-import { Button, Text, Title3, Tooltip } from '@fluentui/react-components';
+import { useEffect, useId, useState, type ReactNode } from 'react';
+import { Button, MessageBar, MessageBarActions, MessageBarBody, MessageBarTitle, Text, Title3, Toast, Toaster, ToastTitle, Tooltip, useToastController } from '@fluentui/react-components';
 import {
   BrainCircuit24Regular,
   CheckmarkCircle24Regular,
+  Clock20Regular,
   DataUsage24Regular,
+  Dismiss20Regular,
   DocumentData24Regular,
   History24Regular,
   Home24Regular,
@@ -15,7 +17,7 @@ import {
   Warning24Regular,
 } from '@fluentui/react-icons';
 import { formatDateTime } from '../format';
-import type { AppView, AssessmentRun } from '../types';
+import type { AppView, AssessmentRun, CommandFeedback } from '../types';
 import { StatusBadge } from './StatusBadge';
 
 interface AppShellProps {
@@ -23,7 +25,8 @@ interface AppShellProps {
   publicMode: boolean;
   activeRun?: AssessmentRun;
   stale: boolean;
-  commandMessage?: string;
+  commandFeedback?: CommandFeedback;
+  onDismissCommand: () => void;
   onNavigate: (view: AppView) => void;
   onQueueAssessment: () => void;
   children: ReactNode;
@@ -39,9 +42,22 @@ const navigation = [
   { id: 'system', label: 'System', icon: Organization24Regular },
 ] as const;
 
-export function AppShell({ view, publicMode, activeRun, stale, commandMessage, onNavigate, onQueueAssessment, children }: AppShellProps) {
+export function AppShell({ view, publicMode, activeRun, stale, commandFeedback, onDismissCommand, onNavigate, onQueueAssessment, children }: AppShellProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const commandError = Boolean(commandMessage && /failed|could not|denied|unavailable/i.test(commandMessage));
+  const toasterId = useId();
+  const { dispatchToast } = useToastController(toasterId);
+  const runDuration = activeRun?.completedAt
+    ? Math.max(0, new Date(activeRun.completedAt).getTime() - new Date(activeRun.startedAt).getTime())
+    : undefined;
+  const durationLabel = runDuration === undefined
+    ? undefined
+    : `${Math.floor(runDuration / 60_000)}m ${Math.floor((runDuration % 60_000) / 1_000)}s`;
+
+  useEffect(() => {
+    if (commandFeedback?.intent !== 'success') return;
+    dispatchToast(<Toast><ToastTitle>{commandFeedback.message}</ToastTitle></Toast>, { intent: 'success', timeout: 8_000 });
+    onDismissCommand();
+  }, [commandFeedback, dispatchToast, onDismissCommand]);
 
   const navigate = (nextView: AppView) => {
     onNavigate(nextView);
@@ -60,10 +76,10 @@ export function AppShell({ view, publicMode, activeRun, stale, commandMessage, o
         </div>
         <nav aria-label="Primary navigation" className="side-nav">
           {navigation.map(({ id, label, icon: Icon }) => (
-            <button key={id} type="button" className={`nav-item ${view === id ? 'nav-item-active' : ''}`} aria-current={view === id ? 'page' : undefined} onClick={() => navigate(id)}>
+            <a key={id} href={`#${id}`} className={`nav-item ${view === id ? 'nav-item-active' : ''}`} aria-current={view === id ? 'page' : undefined} onClick={(event) => { event.preventDefault(); navigate(id); }}>
               <Icon aria-hidden="true" />
               <span>{label}</span>
-            </button>
+            </a>
           ))}
         </nav>
         <div className="sidebar-footer">
@@ -89,6 +105,7 @@ export function AppShell({ view, publicMode, activeRun, stale, commandMessage, o
               <Text weight="semibold">{activeRun?.label ?? 'Loading signed snapshot'}</Text>
               {activeRun ? <StatusBadge value={activeRun.status} subtle /> : null}
               {stale ? <StatusBadge value="STALE" /> : null}
+              {durationLabel ? <span className="run-duration-context"><Clock20Regular aria-hidden="true" />{durationLabel}</span> : null}
             </div>
             {activeRun ? <Text size={100} className="muted">Completed {formatDateTime(activeRun.completedAt)} · {activeRun.shortId}</Text> : null}
           </div>
@@ -103,7 +120,15 @@ export function AppShell({ view, publicMode, activeRun, stale, commandMessage, o
           </div>
         </header>
 
-        {commandMessage ? <div className={commandError ? 'command-error-banner' : 'command-banner'} role={commandError ? 'alert' : 'status'}>{commandError ? <Warning24Regular /> : <CheckmarkCircle24Regular />}<span>{commandMessage}</span></div> : null}
+        <Toaster toasterId={toasterId} position="top-end" />
+        {commandFeedback?.intent === 'error' ? (
+          <div className="command-feedback">
+            <MessageBar intent="error" layout="multiline">
+              <MessageBarBody><MessageBarTitle>Command failed</MessageBarTitle>{commandFeedback.message}</MessageBarBody>
+              <MessageBarActions containerAction={<Button appearance="transparent" icon={<Dismiss20Regular />} aria-label="Dismiss command error" onClick={onDismissCommand} />} />
+            </MessageBar>
+          </div>
+        ) : null}
         {stale ? <div className="stale-banner" role="alert"><Warning24Regular /><span>This snapshot is stale. No current control conclusion should be inferred until collection succeeds.</span></div> : null}
         <main id="main-content" className="main-content" tabIndex={-1}>{children}</main>
       </div>

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Button, Field, Input, Select, Text, Textarea } from '@fluentui/react-components';
 import { CheckmarkCircle20Regular, DocumentData20Regular, Search20Regular } from '@fluentui/react-icons';
 import { assuranceApi } from '../api/client';
-import type { AppView, ConsoleSnapshot, ControlObjective } from '../types';
+import type { AppView, CommandFeedbackInput, ConsoleSnapshot, ControlObjective } from '../types';
 import { ActionDialog } from '../components/ActionDialog';
 import { DetailPanel } from '../components/DetailPanel';
 import { PageHeader } from '../components/PageHeader';
@@ -13,7 +13,7 @@ interface ControlsScreenProps {
   publicMode: boolean;
   focusId?: string;
   onNavigate: (view: AppView, id?: string) => void;
-  onCommand: (message: string) => void;
+  onCommand: (feedback: CommandFeedbackInput) => void;
 }
 
 export function ControlsScreen({ data, publicMode, focusId, onNavigate, onCommand }: ControlsScreenProps) {
@@ -27,7 +27,7 @@ export function ControlsScreen({ data, publicMode, focusId, onNavigate, onComman
   const [pending, setPending] = useState(false);
 
   useEffect(() => {
-    if (focusId) setSelected(data.controls.find((control) => control.id === focusId));
+    setSelected(focusId ? data.controls.find((control) => control.id === focusId) : undefined);
   }, [data.controls, focusId]);
 
   const filtered = useMemo(() => data.controls.filter((control) => {
@@ -41,11 +41,11 @@ export function ControlsScreen({ data, publicMode, focusId, onNavigate, onComman
     setPending(true);
     try {
       const receipt = await assuranceApi.recordDecision({ subject_type: 'control', subject_id: selected.id, artifact_run_id: data.selectedRun.id, decision: reviewConclusion, rationale: rationale.trim(), expected_version: selected.reviewVersion ?? 1 });
-      onCommand(`Reviewer conclusion accepted as command ${receipt.request_id.slice(0, 8)}. The signed assessment artifact was not overwritten.`);
+      onCommand({ intent: 'success', message: `Reviewer conclusion recorded as command ${receipt.request_id.slice(0, 8)}. The signed assessment artifact was not overwritten.` });
       setReviewOpen(false);
       setRationale('');
     } catch (error) {
-      onCommand(error instanceof Error ? `Decision failed: ${error.message}` : 'The reviewer decision could not be recorded.');
+      onCommand({ intent: 'error', message: error instanceof Error ? error.message : 'The reviewer decision could not be recorded.' });
     } finally {
       setPending(false);
     }
@@ -64,20 +64,20 @@ export function ControlsScreen({ data, publicMode, focusId, onNavigate, onComman
 
       <div className={`master-detail ${selected ? 'detail-open' : ''}`}>
         <section className="table-card" aria-label="Control objectives">
-          <div className="table-scroll">
-            <table className="data-table">
+          <div className="table-scroll" tabIndex={0} aria-label="Scrollable control objectives table">
+            <table className="data-table responsive-record-table">
               <thead><tr><th>Control objective</th><th>Family</th><th>Method</th><th>Result</th><th>Design</th><th>Operating</th><th>Owner</th><th>Evidence</th></tr></thead>
               <tbody>
                 {filtered.map((control) => (
                   <tr key={control.id} className={selected?.id === control.id ? 'selected-row' : undefined}>
-                    <td><button type="button" className="table-primary-link" onClick={() => setSelected(control)}><strong>{control.id}</strong><span>{control.title}</span></button></td>
-                    <td>{control.family}</td>
-                    <td>{control.method}</td>
-                    <td><StatusBadge value={control.result} /></td>
-                    <td><StatusBadge value={control.designEffectiveness} subtle /></td>
-                    <td><StatusBadge value={control.operatingEffectiveness} subtle /></td>
-                    <td>{control.owner}</td>
-                    <td><span className="evidence-count"><DocumentData20Regular /> {control.evidenceIds.length}</span></td>
+                    <td data-label="Control objective"><button type="button" className="table-primary-link" onClick={() => { setSelected(control); onNavigate('controls', control.id); }}><strong>{control.id}</strong><span>{control.title}</span></button></td>
+                    <td data-label="Family">{control.family}</td>
+                    <td data-label="Method">{control.method}</td>
+                    <td data-label="Result"><StatusBadge value={control.result} /></td>
+                    <td data-label="Design"><StatusBadge value={control.designEffectiveness} subtle /></td>
+                    <td data-label="Operating"><StatusBadge value={control.operatingEffectiveness} subtle /></td>
+                    <td data-label="Owner">{control.owner}</td>
+                    <td data-label="Evidence"><span className="evidence-count"><DocumentData20Regular /> {control.evidenceIds.length}</span></td>
                   </tr>
                 ))}
               </tbody>
@@ -90,7 +90,7 @@ export function ControlsScreen({ data, publicMode, focusId, onNavigate, onComman
           <DetailPanel
             title={`${selected.id} · ${selected.title}`}
             subtitle={`${selected.family} · ${selected.method}`}
-            onClose={() => setSelected(undefined)}
+            onClose={() => { setSelected(undefined); onNavigate('controls'); }}
             actions={!publicMode ? <Button appearance="primary" icon={<CheckmarkCircle20Regular />} onClick={() => setReviewOpen(true)}>Record reviewer conclusion</Button> : <Text size={200} className="muted">Reviewer actions are unavailable in the public snapshot.</Text>}
           >
             <div className="detail-status-row"><StatusBadge value={selected.result} /><StatusBadge value={selected.freshness} subtle />{selected.changed ? <StatusBadge value={selected.changed.toUpperCase()} subtle /> : null}</div>

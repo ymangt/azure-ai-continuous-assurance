@@ -21,13 +21,14 @@ describe('Assurance Console', () => {
     render(<App />);
     await screen.findByRole('heading', { name: 'Assurance overview' });
 
-    await user.click(screen.getByRole('button', { name: 'Controls' }));
+    await user.click(screen.getByRole('link', { name: 'Controls' }));
     expect(await screen.findByRole('heading', { name: 'Controls' })).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: /SC-7.1/ }));
     await user.click(screen.getByRole('button', { name: 'EVD-R-008' }));
 
     expect(await screen.findByRole('heading', { name: 'Evidence' })).toBeInTheDocument();
-    expect(await screen.findByRole('complementary', { name: /EVD-R-008 details/ })).toBeInTheDocument();
+    expect(await screen.findByRole('complementary', { name: /EVD-R-008/ })).toBeInTheDocument();
+    expect(window.location.hash).toBe('#evidence/EVD-R-008');
   });
 
   it('opens a control criteria preview from the overview trace before navigating', async () => {
@@ -41,7 +42,8 @@ describe('Assurance Console', () => {
 
     await user.click(screen.getByRole('button', { name: 'Open full control' }));
     expect(await screen.findByRole('heading', { name: 'Controls' })).toBeInTheDocument();
-    expect(await screen.findByRole('complementary', { name: /SC-7\.1 details/ })).toBeInTheDocument();
+    expect(await screen.findByRole('complementary', { name: /SC-7\.1/ })).toBeInTheDocument();
+    expect(window.location.hash).toBe('#controls/SC-7.1');
   });
 
   it('opens metric and finding previews from the overview before navigating', async () => {
@@ -54,7 +56,7 @@ describe('Assurance Console', () => {
     await user.click(screen.getByRole('button', { name: 'Stay on overview' }));
     expect(screen.queryByRole('heading', { name: 'Test coverage preview' })).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: /FND-001 · FND-001/i }));
+    await user.click(screen.getByRole('button', { name: /FND-005 · FND-005/i }));
     expect(await screen.findByRole('heading', { name: 'Finding preview' })).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Open finding' }));
     expect(await screen.findByRole('heading', { name: 'Findings & risks' })).toBeInTheDocument();
@@ -93,11 +95,28 @@ describe('Assurance Console', () => {
     expect(screen.getByRole('button', { name: 'Try again' })).toBeInTheDocument();
   });
 
+  it('offers the assessment action from a private empty state', async () => {
+    window.history.replaceState(null, '', '/?state=empty');
+    render(<App />);
+    expect(await screen.findByRole('heading', { name: 'No assessment data yet' })).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: 'Queue assessment' })).toHaveLength(2);
+  });
+
+  it('labels the signed run comparison as a fixed package pair', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByRole('heading', { name: 'Assurance overview' });
+    await user.click(screen.getByRole('link', { name: 'Assessment Runs' }));
+    expect(await screen.findByRole('heading', { name: 'Package-provided comparison' })).toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: 'From' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: 'To' })).not.toBeInTheDocument();
+  });
+
   it('renders the system record carried by the selected signed package', async () => {
     const user = userEvent.setup();
     render(<App />);
     await screen.findByRole('heading', { name: 'Assurance overview' });
-    await user.click(screen.getByRole('button', { name: 'System' }));
+    await user.click(screen.getByRole('link', { name: 'System' }));
     expect(await screen.findByRole('heading', { name: 'Azure AI Continuous Assurance' })).toBeInTheDocument();
     expect(screen.getByText('Assessed boundary architecture')).toBeInTheDocument();
     expect(screen.getByText('Declared system inventory')).toBeInTheDocument();
@@ -105,5 +124,12 @@ describe('Assurance Console', () => {
     expect(screen.getByText('Data flows')).toBeInTheDocument();
     expect(screen.getByText('Explicit exclusions')).toBeInTheDocument();
     expect(screen.getByText('F-07')).toBeInTheDocument();
+  });
+
+  it('opens a focused workpaper directly from a shareable URL', async () => {
+    window.history.replaceState(null, '', '/#findings/FND-005');
+    render(<App />);
+    expect(await screen.findByRole('heading', { name: 'Findings & risks' })).toBeInTheDocument();
+    expect(await screen.findByRole('complementary', { name: /FND-005/ })).toBeInTheDocument();
   });
 });

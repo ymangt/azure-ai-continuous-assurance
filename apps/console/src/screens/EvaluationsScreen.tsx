@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react';
 import { Button, Field, Select, Text, Textarea } from '@fluentui/react-components';
-import { BrainCircuit20Regular, Checkmark20Regular, Dismiss20Regular, DocumentData20Regular } from '@fluentui/react-icons';
+import { BrainCircuit20Regular, Checkmark20Regular, Clipboard20Regular, Dismiss20Regular, DocumentData20Regular } from '@fluentui/react-icons';
 import { assuranceApi } from '../api/client';
 import { formatDateTime, percent } from '../format';
-import type { AppView, ConsoleSnapshot, EvaluationCase } from '../types';
+import type { AppView, CommandFeedbackInput, ConsoleSnapshot, EvaluationCase } from '../types';
 import { ActionDialog } from '../components/ActionDialog';
 import { DetailPanel } from '../components/DetailPanel';
 import { MetricCard } from '../components/MetricCard';
@@ -15,7 +15,7 @@ interface EvaluationsScreenProps {
   data: ConsoleSnapshot;
   publicMode: boolean;
   onNavigate: (view: AppView, id?: string) => void;
-  onCommand: (message: string) => void;
+  onCommand: (feedback: CommandFeedbackInput) => void;
 }
 
 export function EvaluationsScreen({ data, publicMode, onNavigate, onCommand }: EvaluationsScreenProps) {
@@ -30,16 +30,26 @@ export function EvaluationsScreen({ data, publicMode, onNavigate, onCommand }: E
   const categories = [...new Set(evaluation.cases.map((testCase) => testCase.category))];
   const filtered = useMemo(() => evaluation.cases.filter((testCase) => (category === 'ALL' || testCase.category === category) && (result === 'ALL' || testCase.result === result)), [category, evaluation.cases, result]);
 
+  const copyIdentifier = async (label: string, value: string) => {
+    try {
+      if (!navigator.clipboard) throw new Error('Clipboard API unavailable');
+      await navigator.clipboard.writeText(value);
+      onCommand({ intent: 'success', message: `${label} copied.` });
+    } catch {
+      onCommand({ intent: 'error', message: `Clipboard access was denied. Select the ${label.toLowerCase()} to copy it manually.` });
+    }
+  };
+
   const recordSuggestionDecision = async () => {
     if (!decision || !evaluation.suggestedMapping || rationale.trim().length < 12) return;
     setPending(true);
     try {
       const receipt = await assuranceApi.recordDecision({ subject_type: 'suggestion', subject_id: evaluation.suggestedMapping.id, artifact_run_id: data.selectedRun.id, decision, rationale: rationale.trim(), expected_version: evaluation.suggestedMapping.reviewVersion ?? 0 });
-      onCommand(`AI suggestion decision accepted as command ${receipt.request_id.slice(0, 8)} (${decision.toLowerCase()}). The model did not make the control decision.`);
+      onCommand({ intent: 'success', message: `Mapping suggestion ${decision.toLowerCase()}. Reviewer command ${receipt.request_id.slice(0, 8)} was recorded; the model did not make the control decision.` });
       setDecision(undefined);
       setRationale('');
     } catch (error) {
-      onCommand(error instanceof Error ? `Reviewer decision failed: ${error.message}` : 'The AI suggestion decision could not be recorded.');
+      onCommand({ intent: 'error', message: error instanceof Error ? error.message : 'The mapping suggestion decision could not be recorded.' });
     } finally {
       setPending(false);
     }
@@ -50,7 +60,7 @@ export function EvaluationsScreen({ data, publicMode, onNavigate, onCommand }: E
       <PageHeader eyebrow="Behavioral assurance" title="AI evaluations" description="Controlled evaluation evidence bound to the selected signed assessment package." />
 
       <div className="evaluation-meta">
-        <div><Text size={200}>Evaluation</Text><strong>{evaluation.id}</strong></div><div><Text size={200}>Model</Text><strong>{evaluation.model}</strong></div><div><Text size={200}>Prompt</Text><strong>{evaluation.promptVersion}</strong></div><div><Text size={200}>Dataset</Text><strong>{evaluation.datasetVersion}</strong></div><div><Text size={200}>Completed</Text><strong>{formatDateTime(evaluation.createdAt)}</strong></div>
+        <div><Text size={200}>Evaluation</Text><span className="evaluation-meta-value"><strong>{evaluation.id}</strong><Button appearance="subtle" size="small" icon={<Clipboard20Regular />} aria-label="Copy evaluation ID" onClick={() => void copyIdentifier('Evaluation ID', evaluation.id)} /></span></div><div><Text size={200}>Model</Text><strong>{evaluation.model}</strong></div><div><Text size={200}>Prompt</Text><span className="evaluation-meta-value"><strong>{evaluation.promptVersion}</strong><Button appearance="subtle" size="small" icon={<Clipboard20Regular />} aria-label="Copy prompt version" onClick={() => void copyIdentifier('Prompt version', evaluation.promptVersion)} /></span></div><div><Text size={200}>Dataset</Text><strong>{evaluation.datasetVersion}</strong></div><div><Text size={200}>Completed</Text><strong>{formatDateTime(evaluation.createdAt)}</strong></div>
       </div>
 
       <section className="metric-grid evaluation-metrics" aria-label="Evaluation metrics">
@@ -68,9 +78,9 @@ export function EvaluationsScreen({ data, publicMode, onNavigate, onCommand }: E
       </SectionCard>
 
       {evaluation.suggestedMapping ? (
-        <section className="suggestion-card" aria-label="AI suggested control mapping">
-          <div className="suggestion-icon"><BrainCircuit20Regular /></div>
-          <div className="suggestion-content"><div><StatusBadge value={evaluation.suggestedMapping.state} /><Text size={200}>AI-assisted mapping candidate · no authority to conclude</Text></div><strong>{evaluation.suggestedMapping.text}</strong><Text size={200}>{evaluation.suggestedMapping.state === 'SUGGESTED' ? 'A reviewer must accept or reject this append-only suggestion.' : 'The append-only reviewer disposition is shown from this run’s decision history.'} AI cannot declare compliance, accept risk, approve an exception, or close a finding.</Text></div>
+        <section className="suggestion-card" aria-label="Mapping candidate requiring reviewer decision">
+          <div className="suggestion-icon"><DocumentData20Regular /></div>
+          <div className="suggestion-content"><div><StatusBadge value={evaluation.suggestedMapping.state} /><Text size={200}>Model-proposed mapping candidate · reviewer decision required</Text></div><strong>{evaluation.suggestedMapping.text}</strong><Text size={200}>{evaluation.suggestedMapping.state === 'SUGGESTED' ? 'A reviewer must accept or reject this append-only candidate.' : 'The append-only reviewer disposition is shown from this run’s decision history.'} The model cannot declare compliance, accept risk, approve an exception, or close a finding.</Text></div>
           {!publicMode && evaluation.suggestedMapping.state === 'SUGGESTED' ? <div className="suggestion-actions"><Button appearance="secondary" icon={<Dismiss20Regular />} onClick={() => setDecision('REJECTED')}>Reject</Button><Button appearance="primary" icon={<Checkmark20Regular />} onClick={() => setDecision('ACCEPTED')}>Accept mapping</Button></div> : publicMode ? <Text size={200} className="muted">Decision actions unavailable in public mode.</Text> : <Text size={200} className="muted">This suggestion already has a reviewer disposition.</Text>}
         </section>
       ) : evaluation.total > 0 ? (

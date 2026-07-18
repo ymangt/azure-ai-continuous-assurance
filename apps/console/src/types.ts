@@ -205,3 +205,10 @@ export interface ConsoleSnapshot {
 
 export type AppView = 'overview' | 'controls' | 'evidence' | 'findings' | 'runs' | 'evaluations' | 'system';
 export type DemoDataState = 'ready' | 'loading' | 'empty' | 'error' | 'stale';
+export interface CommandFeedback {
+  id: number;
+  intent: 'success' | 'error';
+  message: string;
+}
+
+export type CommandFeedbackInput = Omit<CommandFeedback, 'id'>;

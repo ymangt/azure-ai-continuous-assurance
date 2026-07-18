@@ -1,9 +1,9 @@
-import { useMemo, useState } from 'react';
-import { Button, Field, Select, Text, Title2 } from '@fluentui/react-components';
+import { useState } from 'react';
+import { Button, Text, Title2 } from '@fluentui/react-components';
 import { ArrowRight20Regular, CheckmarkCircle20Regular, Clock20Regular, DocumentSignature20Regular, History20Regular } from '@fluentui/react-icons';
 import { assuranceApi } from '../api/client';
 import { formatDateTime, shortHash } from '../format';
-import type { AppView, ConsoleSnapshot } from '../types';
+import type { AppView, CommandFeedbackInput, ConsoleSnapshot } from '../types';
 import { ActionDialog } from '../components/ActionDialog';
 import { PageHeader } from '../components/PageHeader';
 import { SectionCard } from '../components/SectionCard';
@@ -13,7 +13,7 @@ interface RunsScreenProps {
   data: ConsoleSnapshot;
   publicMode: boolean;
   onNavigate: (view: AppView, id?: string) => void;
-  onCommand: (message: string) => void;
+  onCommand: (feedback: CommandFeedbackInput) => void;
 }
 
 const categories = [
@@ -26,24 +26,21 @@ const categories = [
 ] as const;
 
 export function RunsScreen({ data, publicMode, onNavigate, onCommand }: RunsScreenProps) {
-  const comparableRuns = data.runs.filter((run) => run.signed && !['QUEUED', 'RUNNING'].includes(run.status));
   const retestTarget = data.findings.find((finding) => finding.status === 'OPEN' || finding.status === 'REOPENED' || finding.status === 'READY_FOR_RETEST');
-  const [fromId, setFromId] = useState(data.priorRun.id);
-  const [toId, setToId] = useState(data.selectedRun.id);
   const [retestOpen, setRetestOpen] = useState(false);
   const [pending, setPending] = useState(false);
-  const fromRun = useMemo(() => data.runs.find((run) => run.id === fromId) ?? data.priorRun, [data.priorRun, data.runs, fromId]);
-  const toRun = useMemo(() => data.runs.find((run) => run.id === toId) ?? data.selectedRun, [data.runs, data.selectedRun, toId]);
+  const fromRun = data.priorRun;
+  const toRun = data.selectedRun;
 
   const queueRetest = async () => {
     if (!retestTarget) return;
     setPending(true);
     try {
       const receipt = await assuranceApi.queueRetest(retestTarget.id, data.selectedRun.id);
-      onCommand(`Retest request ${receipt.request_id.slice(0, 8)} queued for ${retestTarget.id}.`);
+      onCommand({ intent: 'success', message: `Retest request ${receipt.request_id.slice(0, 8)} queued for ${retestTarget.id}.` });
       setRetestOpen(false);
     } catch (error) {
-      onCommand(error instanceof Error ? `Retest request failed: ${error.message}` : 'The retest request could not be queued.');
+      onCommand({ intent: 'error', message: error instanceof Error ? error.message : 'The retest request could not be queued.' });
     } finally {
       setPending(false);
     }
@@ -68,12 +65,8 @@ export function RunsScreen({ data, publicMode, onNavigate, onCommand }: RunsScre
 
       {data.comparisonAvailable ? <section className="comparison-section" aria-labelledby="comparison-title">
         <div className="comparison-header">
-          <div><Title2 id="comparison-title" as="h2">Two-run comparison</Title2><Text className="muted">Change categories come from deterministic result and evidence diffs.</Text></div>
-          <div className="comparison-selectors">
-            <Field label="From"><Select value={fromId} onChange={(_, value) => setFromId(value.value)}>{comparableRuns.map((run) => <option key={run.id} value={run.id}>{run.label}</option>)}</Select></Field>
-            <ArrowRight20Regular aria-hidden="true" />
-            <Field label="To"><Select value={toId} onChange={(_, value) => setToId(value.value)}>{comparableRuns.map((run) => <option key={run.id} value={run.id}>{run.label}</option>)}</Select></Field>
-          </div>
+          <div><Title2 id="comparison-title" as="h2">Package-provided comparison</Title2><Text className="muted">This signed package fixes the baseline and selected run; change categories come from its deterministic result and evidence diff.</Text></div>
+          <div className="comparison-fixed-pair" aria-label={`Baseline ${fromRun.label} to selected run ${toRun.label}`}><span>{fromRun.label}</span><ArrowRight20Regular aria-hidden="true" /><span>{toRun.label}</span></div>
         </div>
 
         <div className="run-pair">
