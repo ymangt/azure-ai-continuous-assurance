@@ -258,7 +258,7 @@ Compares two signed runs:
 
 #### Material findings and risks
 
-This preview shows the first material workpapers, their lifecycle status, residual risk, owner, and target date. Clicking a finding opens its detailed workpaper on Findings & Risks. **Open risk register** opens the full register.
+This preview lists up to three finding workpapers and shows each linked residual-risk score, lifecycle status, owner, and target date. The separate Material residual risks metric applies the project’s ≥10 threshold. Clicking a finding opens its detailed workpaper on Findings & Risks. **Open risk register** opens the full register.
 
 #### Evidence freshness
 
