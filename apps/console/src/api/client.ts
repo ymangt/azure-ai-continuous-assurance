@@ -215,6 +215,51 @@ export function normalizeRisks(values: unknown): Risk[] {
   });
 }
 
+function shortenFindingTitle(value: string): string {
+  return value.length > 72 ? `${value.slice(0, 69).trimEnd()}…` : value;
+}
+
+function titleFromCriteria(raw: JsonRecord): string | undefined {
+  const criteria = stringValue(raw.criteria).trim();
+  const requiresMatch = criteria.match(/\brequires\s+(.+)$/i);
+  if (!requiresMatch) return undefined;
+  const phrase = requiresMatch[1].replace(/[.?!]+$/, '').trim();
+  if (!phrase) return undefined;
+  return shortenFindingTitle(phrase.charAt(0).toUpperCase() + phrase.slice(1));
+}
+
+function isWeakFindingTitle(title: string, id: string): boolean {
+  if (!title || title === id) return true;
+  const escapedId = id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  // Package labels like "FND-001 — SC-7.1" are identifiers, not workpaper titles.
+  if (new RegExp(`^${escapedId}\\s*[—\\-]\\s*\\S+$`, 'i').test(title)) return true;
+  if (/^[A-Z]{1,3}-[A-Z0-9-]+\.\d+$/.test(title)) return true;
+  return false;
+}
+
+function deriveFindingTitle(raw: JsonRecord, id: string): string {
+  const explicit = stringValue(raw.title).trim();
+  if (explicit && !isWeakFindingTitle(explicit, id)) return explicit;
+
+  const fromCriteria = titleFromCriteria(raw);
+  if (fromCriteria) return fromCriteria;
+
+  const objectives = Array.isArray(raw.affected_objectives)
+    ? raw.affected_objectives.map(String).filter(Boolean)
+    : [];
+  if (objectives[0]) return objectives[0];
+  const objectiveId = stringValue(raw.objective_id).trim();
+  if (objectiveId) return objectiveId;
+
+  const condition = stringValue(raw.condition).trim();
+  if (condition) {
+    const firstClause = condition.split(/[.;]/)[0]?.trim() ?? condition;
+    return shortenFindingTitle(firstClause);
+  }
+
+  return explicit || id;
+}
+
 export function normalizeFindings(values: unknown, packageValue: unknown, run: AssessmentRun, risks: Risk[]): Finding[] {
   const assessmentPackage = object(packageValue);
   const remediations = records(assessmentPackage.remediations);
@@ -232,7 +277,7 @@ export function normalizeFindings(values: unknown, packageValue: unknown, run: A
     return {
       id,
       objectiveId: stringValue(raw.objective_id) || undefined,
-      title: stringValue(raw.title, stringValue(raw.condition, id)),
+      title: deriveFindingTitle(raw, id),
       status,
       severity: stringValue(raw.severity, 'LOW') as Finding['severity'],
       criteria: stringValue(raw.criteria, 'Criteria unavailable.'),

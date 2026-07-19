@@ -42,6 +42,34 @@ describe('live Assurance API command adapter', () => {
     expect(JSON.parse(String((fetchMock.mock.calls[1][1] as RequestInit).body))).toMatchObject({ artifact_run_id: 'run-current', compensating_controls: ['Daily review of rejected assistant tool events.'], review_cadence: 'monthly' });
   });
 
+  it('derives short finding titles from criteria instead of repeating the condition', async () => {
+    const { normalizeFindings, normalizeRun } = await import('./client');
+    const run = normalizeRun({
+      id: '018f6d9a-7b10-7c01-8000-000000000002',
+      trigger: 'retest',
+      started_at: '2026-06-08T12:00:00Z',
+      ended_at: '2026-06-08T12:10:00Z',
+      status: 'COMPLETED',
+    });
+    const [finding] = normalizeFindings([{
+      finding_id: 'FND-001',
+      criteria: 'SC-7.1 requires no Internet administrative ingress.',
+      condition: 'Baseline broad RDP condition is absent in fresh evidence.',
+      cause: 'Legacy rule removed.',
+      consequence: 'Exposure path removed.',
+      severity: 'HIGH',
+      severity_rationale: 'Historical severity retained.',
+      affected_controls: ['SC-7'],
+      affected_objectives: ['SC-7.1'],
+      affected_assets: ['fixture:legacy-unattached-nsg'],
+      status: 'CLOSED',
+    }], { remediations: [], retests: [], exceptions: [] }, run, []);
+
+    expect(finding.title).toBe('No Internet administrative ingress');
+    expect(finding.title).not.toBe(finding.condition);
+    expect(finding.criteria).toContain('SC-7.1');
+  });
+
   it('normalizes the Python assessment package read model without mock verdict fallback', async () => {
     const prior = { id: '018f6d9a-7b10-7c01-8000-000000000001', trigger: 'manual', scope: ['fixture'], observation_window_start: '2026-06-01T11:00:00Z', observation_window_end: '2026-06-01T12:00:00Z', git_commit: '0000001', collector_version: '1.0.0', evaluator_version: '1.0.0', started_at: '2026-06-01T12:00:00Z', ended_at: '2026-06-01T12:10:00Z', status: 'COMPLETED', estimated_cost_cad: 0.1 };
     const current = { ...prior, id: '018f6d9a-7b10-7c01-8000-000000000002', trigger: 'retest', prior_run_id: prior.id, started_at: '2026-06-08T12:00:00Z', ended_at: '2026-06-08T12:10:00Z', manifest_digest: 'b'.repeat(64) };

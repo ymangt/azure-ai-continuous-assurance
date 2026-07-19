@@ -56,7 +56,7 @@ describe('Assurance Console', () => {
     await user.click(screen.getByRole('button', { name: 'Stay on overview' }));
     expect(screen.queryByRole('heading', { name: 'Test coverage preview' })).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: /FND-005 · FND-005/i }));
+    await user.click(screen.getByRole('button', { name: /FND-005 · Reachable public endpoints/i }));
     expect(await screen.findByRole('heading', { name: 'Finding preview' })).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Open finding' }));
     expect(await screen.findByRole('heading', { name: 'Findings & risks' })).toBeInTheDocument();

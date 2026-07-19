@@ -105,7 +105,7 @@ p { line-height: 1.55; }
 .two-column-grid { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(350px, .85fr); gap: 16px; }
 
 .distribution-bar { display: flex; height: 13px; overflow: hidden; background: #eef2f6; border-radius: 10px; }
-.distribution-bar span { min-width: 2px; transition: width .3s; }
+.distribution-bar span { min-width: 2px; }
 .distribution-segment.distribution-pass { background: #0e7a5f; }
 .distribution-segment.distribution-fail { background: #c4314b; }
 .distribution-segment.distribution-error { background: #8f2e00; }
@@ -207,8 +207,10 @@ p { line-height: 1.55; }
 .detail-panel { position: sticky; top: 104px; display: flex; max-height: calc(100vh - 130px); flex-direction: column; overflow: hidden; background: #fff; border: 1px solid var(--line-strong); border-radius: 9px; box-shadow: var(--shadow); }
 .detail-panel-scrim { position: fixed; z-index: 23; inset: 82px 0 0; background: var(--overlay-scrim); border: 0; }
 .detail-panel-header { display: flex; flex: 0 0 auto; align-items: flex-start; justify-content: space-between; gap: 14px; padding: 18px; background: #f7f9fb; border-bottom: 1px solid var(--line); }
-.detail-panel-header h2 { margin: 0 0 5px; font-size: 1.15rem; }
-.detail-panel-body { display: grid; gap: 18px; padding: 18px; overflow-y: auto; }
+.detail-panel-header > div:first-child { min-width: 0; display: grid; gap: 4px; }
+.detail-panel-header h2 { margin: 0; font-size: 1.15rem; line-height: 1.35; overflow-wrap: anywhere; }
+.detail-panel-header .muted { display: block; line-height: 1.4; }
+.detail-panel-body { flex: 1 1 auto; min-height: 0; display: grid; align-content: start; grid-auto-rows: min-content; gap: 18px; padding: 18px; overflow-x: hidden; overflow-y: auto; }
 .detail-panel-actions { flex: 0 0 auto; padding: 14px 18px; background: #fff; border-top: 1px solid var(--line); }
 .detail-status-row { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; }
 .workpaper-section { display: grid; gap: 6px; }
@@ -229,9 +231,10 @@ p { line-height: 1.55; }
 .segmented-control button { display: flex; align-items: center; gap: 8px; padding: 8px 13px; color: #4d6075; background: transparent; border: 0; border-radius: 5px; cursor: pointer; font-weight: 600; }
 .segmented-control button.active { color: #183b60; background: #fff; box-shadow: 0 1px 4px rgba(20,42,74,.15); }
 .segmented-control button span { display: inline-grid; min-width: 20px; height: 20px; place-items: center; background: #dce5ed; border-radius: 10px; font-size: .68rem; }
-.finding-workpaper { display: grid; gap: 1px; overflow: hidden; border: 1px solid var(--line); border-radius: 6px; }
+.finding-workpaper { display: grid; gap: 0; min-width: 0; min-height: min-content; border: 1px solid var(--line); border-radius: 6px; }
 .finding-workpaper section { display: grid; gap: 5px; padding: 11px; background: #fafbfc; border-bottom: 1px solid var(--line); }
-.finding-workpaper section:last-child { border-bottom: 0; }
+.finding-workpaper section:first-child { border-radius: 5px 5px 0 0; }
+.finding-workpaper section:last-child { border-bottom: 0; border-radius: 0 0 5px 5px; }
 .finding-workpaper p { margin: 0; color: #394b60; font-size: .8rem; }
 .panel-button-row { display: flex; flex-wrap: wrap; gap: 7px; }
 .exception-card { display: grid; gap: 9px; padding: 13px; background: #fff8e9; border: 1px solid #ead49e; border-radius: 6px; }
@@ -272,8 +275,8 @@ p { line-height: 1.55; }
 .comparison-fixed-pair span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .comparison-fixed-pair svg { flex: 0 0 auto; }
 .run-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-.run-card { display: grid; gap: 9px; padding: 18px; background: #fff; border: 1px solid var(--line); border-top: 3px solid #60819e; border-radius: 8px; }
-.run-card:last-child { border-top-color: var(--success); }
+.run-card { display: grid; gap: 9px; padding: 18px; background: #fff; border: 1px solid var(--line); border-radius: 8px; box-shadow: inset 0 3px 0 #60819e; }
+.run-card:last-child { box-shadow: inset 0 3px 0 var(--success); }
 .run-card h3 { margin: 0; }
 .run-card dl { display: grid; margin: 6px 0 0; }
 .run-card dl div { display: grid; grid-template-columns: 150px 1fr; gap: 8px; padding: 7px 0; border-top: 1px solid #e8edf2; }

@@ -27,6 +27,11 @@ describe('console snapshot states', () => {
     });
     expect(snapshot.selectedRun.manifestDigest).toMatch(/^[a-f0-9]{64}$/);
     expect(snapshot.controls).toHaveLength(35);
+    expect(snapshot.findings.length).toBeGreaterThan(0);
+    expect(snapshot.findings.every((finding) => finding.title !== finding.condition)).toBe(true);
+    expect(snapshot.findings.every((finding) => finding.title.length <= 72)).toBe(true);
+    expect(snapshot.findings.every((finding) => !finding.title.startsWith(`${finding.id} —`))).toBe(true);
+    expect(snapshot.findings.find((finding) => finding.id === 'FND-001')?.title).toBe('No Internet administrative ingress');
     expect(snapshot.controls.some((control) => control.id === 'AI-DP-01.1')).toBe(true);
     expect(snapshot.controls.some((control) => control.id === 'AI-DP-01.2')).toBe(false);
     expect(snapshot.evaluation).toMatchObject({ model: 'ReplayModelAdapter', total: 50, passed: 50 });

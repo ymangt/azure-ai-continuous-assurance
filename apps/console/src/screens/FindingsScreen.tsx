@@ -17,7 +17,7 @@ interface FindingsScreenProps {
   onCommand: (feedback: CommandFeedbackInput) => void;
 }
 
-type DialogMode = 'none' | 'retest' | 'exception' | 'ready' | 'disposition';
+type DialogMode = 'retest' | 'exception' | 'ready' | 'disposition';
 
 function utcDateOffset(days: number): string {
   const value = new Date();
@@ -25,12 +25,42 @@ function utcDateOffset(days: number): string {
   return value.toISOString().slice(0, 10);
 }
 
+function dialogCopy(mode: DialogMode, findingId: string, decision = ''): { title: string; description: string; confirmLabel: string } {
+  switch (mode) {
+    case 'retest':
+      return {
+        title: `Queue retest for ${findingId}`,
+        description: 'A headless job will collect new evidence. This request cannot close the finding by itself.',
+        confirmLabel: 'Queue retest',
+      };
+    case 'ready':
+      return {
+        title: 'Mark remediation ready for retest',
+        description: 'Record ownership, the implemented action, commit or pull request, and proof from this signed run. A later retest and reviewer decision determine closure.',
+        confirmLabel: 'Record readiness',
+      };
+    case 'disposition':
+      return {
+        title: `Accept ${decision.toLowerCase()} recommendation`,
+        description: 'Record the reviewer disposition of the latest signed retest recommendation. The underlying result and evidence remain immutable.',
+        confirmLabel: 'Record disposition',
+      };
+    case 'exception':
+      return {
+        title: 'Create time-bounded exception',
+        description: 'An exception changes treatment only. It does not convert the failed test to a pass or erase the observation.',
+        confirmLabel: 'Create exception',
+      };
+  }
+}
+
 export function FindingsScreen({ data, publicMode, focusId, onNavigate, onCommand }: FindingsScreenProps) {
   const [tab, setTab] = useState<'findings' | 'risks'>('findings');
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('ALL');
   const [selected, setSelected] = useState<Finding>();
-  const [dialog, setDialog] = useState<DialogMode>('none');
+  const [dialog, setDialog] = useState<DialogMode>('retest');
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [pending, setPending] = useState(false);
   const [rationale, setRationale] = useState('');
   const [compensatingControl, setCompensatingControl] = useState('');
@@ -65,6 +95,13 @@ export function FindingsScreen({ data, publicMode, focusId, onNavigate, onComman
     && new Set(remediationEvidenceIds).size === remediationEvidenceIds.length
     && remediationEvidenceIds.every((id) => knownEvidenceIds.has(id));
 
+  const openDialog = (mode: DialogMode) => {
+    setDialog(mode);
+    setDialogOpen(true);
+  };
+
+  const closeDialog = () => setDialogOpen(false);
+
   const openReadyDialog = () => {
     if (!selected) return;
     setRemediationOwner(selected.owner);
@@ -72,7 +109,7 @@ export function FindingsScreen({ data, publicMode, focusId, onNavigate, onComman
     setRemediationTargetDate(selected.targetDate || utcDateOffset(30));
     setRemediationReference(selected.remediationReference ?? '');
     setRemediationEvidence('');
-    setDialog('ready');
+    openDialog('ready');
   };
 
   const runCommand = async () => {
@@ -101,7 +138,7 @@ export function FindingsScreen({ data, publicMode, focusId, onNavigate, onComman
         const receipt = await assuranceApi.createException({ finding_id: selected.id, artifact_run_id: data.selectedRun.id, rationale: rationale.trim(), compensating_control: compensatingControl.trim(), expires_at: expiresAt, expected_version: selected.reviewVersion ?? 1 });
         onCommand({ intent: 'success', message: `Time-bounded exception ${receipt.request_id.slice(0, 8)} recorded. The failed test and observation remain unchanged.` });
       }
-      setDialog('none');
+      closeDialog();
       setRationale('');
       setCompensatingControl('');
     } catch (error) {
@@ -111,6 +148,7 @@ export function FindingsScreen({ data, publicMode, focusId, onNavigate, onComman
     }
   };
 
+  const copy = dialogCopy(dialog, selected?.id ?? '', latestRetest?.decision ?? '');
   const canSubmit = dialog === 'retest'
     || (dialog === 'ready'
       && remediationOwner.trim().length >= 2
@@ -160,12 +198,12 @@ export function FindingsScreen({ data, publicMode, focusId, onNavigate, onComman
             </section>
 
             {selected ? (
-              <DetailPanel title={`${selected.id} · ${selected.title}`} subtitle={`${selected.asset} · opened ${formatDate(selected.openedAt)}`} onClose={() => { setSelected(undefined); onNavigate('findings'); }} actions={!publicMode ? (
+              <DetailPanel title={`${selected.id} · ${selected.title}`} subtitle={`${selected.asset} · Opened ${formatDate(selected.openedAt)}`} onClose={() => { setSelected(undefined); onNavigate('findings'); }} actions={!publicMode ? (
                 <div className="panel-button-row">
-                  {selected.status === 'OPEN' || selected.status === 'REOPENED' ? <Button appearance="secondary" icon={<CalendarClock20Regular />} onClick={() => setDialog('exception')}>Create exception</Button> : null}
+                  {selected.status === 'OPEN' || selected.status === 'REOPENED' ? <Button appearance="secondary" icon={<CalendarClock20Regular />} onClick={() => openDialog('exception')}>Create exception</Button> : null}
                   {selected.status === 'OPEN' || selected.status === 'REOPENED' ? <Button appearance="primary" onClick={openReadyDialog}>Mark ready for retest</Button> : null}
-                  {selected.status === 'READY_FOR_RETEST' || selected.status === 'CLOSED' ? <Button appearance="primary" icon={<History20Regular />} onClick={() => setDialog('retest')}>Queue retest</Button> : null}
-                  {reviewableRetest ? <Button appearance="primary" icon={<CheckmarkCircle20Regular />} onClick={() => setDialog('disposition')}>{latestRetest?.decision === 'CLOSE' ? 'Accept closure recommendation' : 'Accept reopen recommendation'}</Button> : null}
+                  {selected.status === 'READY_FOR_RETEST' || selected.status === 'CLOSED' ? <Button appearance="primary" icon={<History20Regular />} onClick={() => openDialog('retest')}>Queue retest</Button> : null}
+                  {reviewableRetest ? <Button appearance="primary" icon={<CheckmarkCircle20Regular />} onClick={() => openDialog('disposition')}>{latestRetest?.decision === 'CLOSE' ? 'Accept closure recommendation' : 'Accept reopen recommendation'}</Button> : null}
                 </div>
               ) : <Text size={200} className="muted">Decision and run actions are unavailable in public mode.</Text>}>
                 <div className="detail-status-row"><StatusBadge value={selected.status} /><StatusBadge value={selected.severity} /></div>
@@ -193,7 +231,7 @@ export function FindingsScreen({ data, publicMode, focusId, onNavigate, onComman
         </div>
       )}
 
-      <ActionDialog open={dialog !== 'none'} title={dialog === 'retest' ? `Queue retest for ${selected?.id ?? ''}` : dialog === 'ready' ? 'Mark remediation ready for retest' : dialog === 'disposition' ? `Accept ${latestRetest?.decision.toLowerCase() ?? ''} recommendation` : 'Create time-bounded exception'} description={dialog === 'retest' ? 'A headless job will collect new evidence. This request cannot close the finding by itself.' : dialog === 'ready' ? 'Record ownership, the implemented action, commit or pull request, and proof from this signed run. A later retest and reviewer decision determine closure.' : dialog === 'disposition' ? 'Record the reviewer disposition of the latest signed retest recommendation. The underlying result and evidence remain immutable.' : 'An exception changes treatment only. It does not convert the failed test to a pass or erase the observation.'} confirmLabel={dialog === 'retest' ? 'Queue retest' : dialog === 'ready' ? 'Record readiness' : dialog === 'disposition' ? 'Record disposition' : 'Create exception'} pending={pending} confirmDisabled={!canSubmit} onClose={() => setDialog('none')} onConfirm={() => { if (canSubmit) void runCommand(); }}>
+      <ActionDialog open={dialogOpen} title={copy.title} description={copy.description} confirmLabel={copy.confirmLabel} pending={pending} confirmDisabled={!canSubmit} onClose={closeDialog} onConfirm={() => { if (canSubmit) void runCommand(); }}>
         {dialog !== 'retest' && dialog !== 'ready' ? <Field label="Rationale" required validationMessage={rationale.length > 0 && rationale.trim().length < 12 ? 'Provide at least 12 characters.' : undefined}><Textarea value={rationale} onChange={(_, value) => setRationale(value.value)} resize="vertical" /></Field> : null}
         {dialog === 'ready' ? <>
           <Field label="Remediation owner" required><Input value={remediationOwner} onChange={(_, value) => setRemediationOwner(value.value)} /></Field>
