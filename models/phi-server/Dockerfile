@@ -1,4 +1,4 @@
-FROM python:3.12-slim@sha256:57cd7c3a7a273101a6485ba99423ee568157882804b1124b4dd04266317710de AS model
+FROM python:3.14-slim@sha256:cea0e6040540fb2b965b6e7fb5ffa00871e632eef63719f0ea54bca189ce14a6 AS model
 
 ARG MODEL_REVISION=9b9010e414c555d094141b5bb8da092ebe8f79fa
 RUN python -m pip install --no-cache-dir "huggingface_hub[hf_xet]==0.36.0" \
@@ -9,7 +9,7 @@ RUN python -m pip install --no-cache-dir "huggingface_hub[hf_xet]==0.36.0" \
       --local-dir /tmp/phi \
     && cp -R /tmp/phi/cpu_and_mobile/cpu-int4-rtn-block-32-acc-level-4/. /models/phi/
 
-FROM python:3.12-slim@sha256:57cd7c3a7a273101a6485ba99423ee568157882804b1124b4dd04266317710de
+FROM python:3.14-slim@sha256:cea0e6040540fb2b965b6e7fb5ffa00871e632eef63719f0ea54bca189ce14a6
 ENV PIP_DISABLE_PIP_VERSION_CHECK=1 \
     PIP_NO_CACHE_DIR=1 \
     PYTHONDONTWRITEBYTECODE=1 \
