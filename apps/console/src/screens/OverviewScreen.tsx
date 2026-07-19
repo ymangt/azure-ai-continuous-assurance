@@ -33,9 +33,16 @@ export function OverviewScreen({ data, onNavigate }: OverviewScreenProps) {
     NOT_RUN: data.controls.filter((control) => control.result === 'NOT_RUN').length,
     NOT_APPLICABLE: data.controls.filter((control) => control.result === 'NOT_APPLICABLE').length,
   };
+  const evidenceCount = data.evidence.length;
   const currentEvidence = data.evidence.filter((item) => item.freshness === 'CURRENT').length;
   const staleEvidence = data.evidence.filter((item) => item.freshness === 'STALE').length;
   const unavailableEvidence = data.evidence.filter((item) => item.freshness === 'UNAVAILABLE').length;
+  const evidenceDetail = !evidenceCount
+    ? 'No evidence available'
+    : staleEvidence || unavailableEvidence
+      ? `${staleEvidence} stale · ${unavailableEvidence} unavailable · required gaps force NOT CONCLUDED`
+      : 'All current · required stale/unavailable evidence forces NOT CONCLUDED';
+  const evidenceTone = !evidenceCount || staleEvidence || unavailableEvidence ? 'warning' : 'good';
   const coverage = data.controls.length ? data.controls.filter((control) => control.result !== 'NOT_RUN').length / data.controls.length : 0;
   const materialRisks = data.risks.filter((risk) => risk.residualScore >= 10).length;
   const openFindings = data.findings.filter((finding) => finding.status === 'OPEN' || finding.status === 'REOPENED' || finding.status === 'READY_FOR_RETEST');
@@ -106,13 +113,9 @@ export function OverviewScreen({ data, onNavigate }: OverviewScreenProps) {
         <MetricCard label="Test coverage" value={`${Math.round(coverage * 100)}%`} detail={`${data.controls.length} tailored objectives in the current snapshot`} tone="good" icon={<CheckmarkCircle24Regular />} onClick={() => showPreview({ kind: 'coverage' })} />
         <MetricCard
           label="Current evidence"
-          value={`${currentEvidence}/${data.evidence.length}`}
-          detail={
-            staleEvidence || unavailableEvidence
-              ? `${staleEvidence} stale · ${unavailableEvidence} unavailable · required gaps force NOT CONCLUDED`
-              : 'All current · required stale/unavailable evidence forces NOT CONCLUDED'
-          }
-          tone={currentEvidence === data.evidence.length ? 'good' : 'warning'}
+          value={`${currentEvidence}/${evidenceCount}`}
+          detail={evidenceDetail}
+          tone={evidenceTone}
           icon={<DocumentData24Regular />}
           onClick={() => showPreview({ kind: 'evidence' })}
         />
@@ -204,8 +207,16 @@ export function OverviewScreen({ data, onNavigate }: OverviewScreenProps) {
           <>
             <div className="overview-preview-header">
               <div>
-                <Text weight="semibold">{currentEvidence} of {data.evidence.length} artifacts are current</Text>
-                <Text size={200} className="muted">Freshness is evaluated independently from PASS/FAIL results</Text>
+                <Text weight="semibold">
+                  {!evidenceCount
+                    ? 'No evidence artifacts are projected in this snapshot'
+                    : `${currentEvidence} of ${evidenceCount} artifacts are current`}
+                </Text>
+                <Text size={200} className="muted">
+                  {!evidenceCount
+                    ? 'Without evidence, control conclusions remain NOT CONCLUDED'
+                    : 'Freshness is evaluated independently from PASS/FAIL results'}
+                </Text>
               </div>
             </div>
             <div className="dialog-summary overview-preview-summary">
@@ -214,7 +225,11 @@ export function OverviewScreen({ data, onNavigate }: OverviewScreenProps) {
               <Text size={200}>Unavailable</Text><strong>{unavailableEvidence}</strong>
               <Text size={200}>Sources shown</Text><strong>{evidenceSources.length ? evidenceSources.join(' · ') : '—'}</strong>
             </div>
-            <Text size={200} className="muted">Stale or unavailable required evidence forces NOT CONCLUDED regardless of the prior test result.</Text>
+            <Text size={200} className="muted">
+              {!evidenceCount
+                ? 'Queue or open a signed run that includes evidence before treating freshness as current.'
+                : 'Stale or unavailable required evidence forces NOT CONCLUDED regardless of the prior test result.'}
+            </Text>
           </>
         ) : null}
 

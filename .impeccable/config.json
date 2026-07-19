@@ -3,9 +3,7 @@
     "ignoreRules": [
       "side-tab"
     ],
-    "ignoreFiles": [
-      "apps/console/src/styles.css"
-    ],
+    "ignoreFiles": [],
     "ignoreValues": []
   }
 }
