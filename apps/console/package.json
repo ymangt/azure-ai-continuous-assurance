@@ -16,7 +16,7 @@
   "dependencies": {
     "@fluentui/react-components": "^9.72.8",
     "@fluentui/react-icons": "^2.0.310",
-    "react": "^19.1.1",
+    "react": "^19.2.8",
     "react-dom": "^19.1.1"
   },
   "devDependencies": {
