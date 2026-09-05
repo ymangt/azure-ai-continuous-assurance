@@ -13,7 +13,7 @@ ENV VITE_DATA_SOURCE=$VITE_DATA_SOURCE \
     VITE_PUBLIC_MODE=$VITE_PUBLIC_MODE
 RUN npm run build
 
-FROM nginxinc/nginx-unprivileged:1.31.3-alpine@sha256:a718212f9cf21e241f14067333000a3f0930292f5354fe0db269e9a2a2596b9e
+FROM nginxinc/nginx-unprivileged:1.31.5-alpine@sha256:aa8c9087d36d93e9d650c5365f883b421e8214aedbad24ade52b844c583358f1
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/dist /usr/share/nginx/html
 USER 101:101
